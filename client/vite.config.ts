@@ -7,6 +7,14 @@ import VueDevTools from 'vite-plugin-vue-devtools'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    {
+      name: 'fix-recast',
+      transform(code, id) {
+        if (id.includes('recast-detour.js')) {
+          return code.replace(`this["Recast"]`, 'window["Recast"]');
+        }
+      }
+    },
     vue(),
     VueDevTools(),
   ],
