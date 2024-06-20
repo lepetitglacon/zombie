@@ -11,19 +11,32 @@ export default class GameEngine {
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas
 
+        window.addEventListener('keypress', (e: KeyboardEvent) => {
+            console.log(e.code, e.key, e.keyCode, e.which)
+        })
+
         this.engine = new BABYLON.Engine(this.canvas, true)
         this.scene = new BABYLON.Scene(this.engine)
 
         this.world = new World({engine: this})
 
-        this.camera = new BABYLON.UniversalCamera(
+        this.camera = new BABYLON.FlyCamera(
             "camera11",
             new BABYLON.Vector3(0, 5, -10),
             this.scene
         );
         this.camera.inertia = 0
+        this.camera.rollCorrect = 2
         this.camera.setTarget(BABYLON.Vector3.Zero());
         this.camera.attachControl(this.canvas, true);
+        // zqsd https://www.toptal.com/developers/keycode
+        this.camera.keysForward = [90]
+        this.camera.keysBackward = [83]
+        this.camera.keysUp = [32]
+        this.camera.keysDown = [16]
+        this.camera.keysLeft = [81]
+        this.camera.keysRight = [68]
+        console.log(this.camera)
 
         this.canvas.addEventListener('click', () => {
             this.canvas.requestPointerLock({unadjustedMovement: true})
