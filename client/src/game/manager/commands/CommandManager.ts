@@ -16,9 +16,6 @@ export default class CommandManager {
         this.registerCommand('test', () => {
             return 'GRAHAHOUAHAH (test command working)'
         })
-        this.registerCommand('test', () => {
-            return 'GRAHAHOUAHAH (test command working)'
-        })
 
         this.bind()
     }
