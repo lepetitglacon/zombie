@@ -9,11 +9,42 @@ import mapGltf from '../../assets/gltf/flora_square.glb?url'
 
 export default class World {
     private engine: GameEngine;
-    private scene: any;
+    public scene: any;
+    public babylonEngine: BABYLON.Engine;
+    private camera: BABYLON.UniversalCamera;
 
     constructor({engine}) {
         this.engine = engine
+        this.babylonEngine = new BABYLON.Engine(this.engine.canvas, true)
+        this.scene = new BABYLON.Scene(this.babylonEngine)
 
+        this.camera = new BABYLON.UniversalCamera(
+            "camera11",
+            new BABYLON.Vector3(0, 5, -10),
+            this.scene
+        );
+        this.camera.inertia = 0
+        this.camera.setTarget(BABYLON.Vector3.Zero());
+        this.camera.attachControl(this.engine.canvas, true);
+
+        const light = new BABYLON.HemisphericLight(
+            "light",
+            new BABYLON.Vector3(0, 1, 0),
+            this.scene
+        );
+        light.intensity = 0.7;
+
+        this.babylonEngine.runRenderLoop(() => {
+            this.scene.render();
+        });
+
+        this.bind()
+    }
+
+    bind() {
+        window.addEventListener("resize", () => {
+            this.babylonEngine.resize();
+        });
     }
 
     async init() {
