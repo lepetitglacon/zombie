@@ -5,6 +5,7 @@
 
   <canvas
       ref="canvas"
+      class="canvas"
       width="800"
       height="800"
   >
@@ -33,5 +34,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
-
+.canvas {
+  width: 100vw;
+  height: 100vh;
+}
 </style>
