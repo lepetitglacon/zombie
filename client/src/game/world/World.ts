@@ -12,6 +12,7 @@ export default class World {
     public scene: any;
     public babylonEngine: BABYLON.Engine;
     private camera: BABYLON.UniversalCamera;
+    navigationPlugin: RecastJSPlugin;
 
     constructor({engine}) {
         this.engine = engine
@@ -34,10 +35,6 @@ export default class World {
         );
         light.intensity = 0.7;
 
-        this.babylonEngine.runRenderLoop(() => {
-            this.scene.render();
-        });
-
         this.bind()
     }
 
@@ -45,6 +42,23 @@ export default class World {
         window.addEventListener("resize", () => {
             this.babylonEngine.resize();
         });
+
+        window.addEventListener("mousemove", () => {
+            var pickinfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
+            if (pickinfo.hit) {
+                console.log(pickinfo.pickedPoint);
+            }
+        });
+
+        this.scene.onPointerObservable.add((pointerInfo) => {
+            switch (pointerInfo.type) {
+                case BABYLON.PointerEventTypes.POINTERDOWN:
+                    if(pointerInfo.pickInfo.hit) {
+                        console.log(pointerInfo)
+                    }
+                    break;
+            }
+        })
     }
 
     async init() {
@@ -52,12 +66,11 @@ export default class World {
         const filename = mapGltf.substring(mapGltf.lastIndexOf('/') + 1)
         const path = mapGltf.substring(0, mapGltf.lastIndexOf('/') + 1)
         const scene = await BABYLON.SceneLoader.AppendAsync(path, filename);
-        console.log(scene)
 
         const recast = await Recast();
-        let navigationPlugin = new RecastJSPlugin(recast);
-        console.log(this.scene)
-        navigationPlugin.createNavMesh(scene.meshes, {
+        this.navigationPlugin = new RecastJSPlugin(recast);
+        const navMeshObjects = ['Floor', 'Stair', 'Door', 'Wall', 'Building']
+        this.navigationPlugin.createNavMesh(scene.meshes.filter(el => navMeshObjects.includes(el.metadata?.gltf?.extras?.type)), {
             cs: 0.2,
             ch: 0.1,
             walkableSlopeAngle: 35,
@@ -73,10 +86,14 @@ export default class World {
             detailSampleMaxError: 1,
         })
 
-        const navmeshdebug = navigationPlugin.createDebugNavMesh(this.engine.scene);
-        const matdebug = new BABYLON.StandardMaterial("matdebug", this.engine.scene);
+        const navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.engine.world.scene);
+        const matdebug = new BABYLON.StandardMaterial("matdebug", this.engine.world.scene);
         matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
         matdebug.alpha = 0.2;
         navmeshdebug.material = matdebug;
+
+        this.babylonEngine.runRenderLoop(() => {
+            this.scene.render();
+        });
     }
 }
