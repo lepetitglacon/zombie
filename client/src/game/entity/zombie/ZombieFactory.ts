@@ -8,7 +8,13 @@ export default class ZombieFactory {
     }
 
     createZombie(conf = {}) {
-        const zombie = new BasicZombie()
+
+        let zombie
+        switch (conf?.type) {
+            default:
+                zombie = new BasicZombie(this.engine.world.scene)
+                break
+        }
 
         if (conf.position) {
             zombie.position.copyFrom(conf.position)

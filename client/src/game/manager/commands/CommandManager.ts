@@ -13,8 +13,8 @@ export default class CommandManager {
         this.commandHistory = []
         this.chat = this.engine.chatEngineRef
 
-        this.registerCommand('test', () => {
-            return 'GRAHAHOUAHAH (test command working)'
+        this.registerCommand('test', (args: Array<string>) => {
+            return 'test command working with args: ' + args.join(' | ')
         })
 
         this.bind()
@@ -27,12 +27,12 @@ export default class CommandManager {
 
                     const message = this.chat.value.inputValue
                     if (this.messageIsCommand(message)) {
-                        const command = this.parseCommand(message)
-                        this.commandHistory.push(command)
-                        if (this.commands.has(command)) {
-                            this.chat.value.messages.push(new Message(this.commands.get(command)()))
+                        const commandObject = this.parseCommand(message)
+                        this.commandHistory.push(commandObject.command)
+                        if (this.commands.has(commandObject.command)) {
+                            this.chat.value.messages.push(new Message(this.commands.get(commandObject.command)(commandObject.args)))
                         } else {
-                            this.chat.value.messages.push(new Message(`command "${command}" not found`))
+                            this.chat.value.messages.push(new Message(`command "${commandObject.command}" not found`))
                         }
                     } else {
                         this.chat.value.messages.push(new Message(message))
@@ -53,6 +53,12 @@ export default class CommandManager {
     }
 
     parseCommand(message: string) {
-        return message.substring(1)
+        const splittedCommand = message.substring(1).trim().split(' ')
+        const command = splittedCommand[0]
+        splittedCommand.shift()
+        return {
+            command: command,
+            args: splittedCommand
+        }
     }
 }

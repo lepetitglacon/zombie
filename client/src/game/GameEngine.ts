@@ -33,5 +33,6 @@ export default class GameEngine {
 
     async init() {
         await this.world.init()
+        await this.zombieManager.init() //todo mettre navmesh ici
     }
 }
