@@ -15,7 +15,7 @@ export default class Gui {
         button1.width = "150px"
         button1.height = "40px";
         button1.color = "white";
-        button1.cornerRadius = 20;
+        button1.cornerRadius = 5;
         button1.background = "green";
         button1.onPointerEnterObservable.add(() => {
             button1.background = 'blue'
