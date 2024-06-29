@@ -12,7 +12,7 @@ export default class World {
     public scene: any;
     public babylonEngine: BABYLON.Engine;
     private camera: BABYLON.UniversalCamera;
-    navigationPlugin: RecastJSPlugin;
+    public navigationPlugin: RecastJSPlugin;
 
     constructor({engine}) {
         this.engine = engine
@@ -25,8 +25,16 @@ export default class World {
             this.scene
         );
         this.camera.inertia = 0
+        this.camera.rollCorrect = 2
         this.camera.setTarget(BABYLON.Vector3.Zero());
         this.camera.attachControl(this.engine.canvas, true);
+        // zqsd https://www.toptal.com/developers/keycode
+        this.camera.keysForward = [90]
+        this.camera.keysBackward = [83]
+        this.camera.keysUp = [32]
+        this.camera.keysDown = [16]
+        this.camera.keysLeft = [81]
+        this.camera.keysRight = [68]
 
         const light = new BABYLON.HemisphericLight(
             "light",
