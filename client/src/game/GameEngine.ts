@@ -2,6 +2,7 @@ import * as BABYLON from '@babylonjs/core'
 import World from './world/World'
 import CommandManager from "@/game/manager/commands/CommandManager";
 import ZombieManager from "@/game/manager/zombie/ZombieManager";
+import Gui from "@/game/gui/Gui";
 
 export default class GameEngine {
     public canvas: HTMLCanvasElement;
@@ -9,6 +10,7 @@ export default class GameEngine {
     public chatEngineRef: any;
     public commandManager: CommandManager;
     private zombieManager: ZombieManager;
+    private gui: Gui;
 
     constructor(options: {
         canvas: HTMLCanvasElement,
@@ -24,6 +26,7 @@ export default class GameEngine {
 
         // Game
         this.world = new World({engine: this})
+        this.gui = new Gui({engine: this})
 
         this.canvas.addEventListener('click', () => {
             this.canvas.requestPointerLock({unadjustedMovement: true})
