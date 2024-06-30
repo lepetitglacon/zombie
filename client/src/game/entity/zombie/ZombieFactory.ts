@@ -18,6 +18,7 @@ export default class ZombieFactory {
 
         if (conf.position) {
             zombie.position.copyFrom(conf.position)
+            zombie.hitbox.position.copyFrom(conf.position)
         }
 
         return zombie

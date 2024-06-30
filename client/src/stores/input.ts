@@ -11,10 +11,8 @@ const camera = ref()
 export default function useInputs() {
 
     function requestPointerLock(e) {
-        console.log(e)
         if (!isLocked.value) {
             canvas.value.requestPointerLock = canvas.value.requestPointerLock || canvas.value.msRequestPointerLock || canvas.value.mozRequestPointerLock || canvas.value.webkitRequestPointerLock;
-            console.log(canvas.value.requestPointerLock)
             if (canvas.value.requestPointerLock) {
                 canvas.value.requestPointerLock();
             }
@@ -23,7 +21,6 @@ export default function useInputs() {
     
     onMounted(() => {
         canvas.value.addEventListener('click', requestPointerLock)
-        console.log(scene.value)
 
     })
 

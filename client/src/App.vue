@@ -16,6 +16,8 @@
 </template>
 
 <script setup lang="ts">
+import './assets/css/reset.css'
+
 import { RouterLink, RouterView } from 'vue-router'
 import {onMounted, ref} from "vue";
 import GameEngine from "@/game/GameEngine";
