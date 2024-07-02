@@ -90,12 +90,12 @@ export default class World {
         this.navigationPlugin = new RecastJSPlugin(recast);
         const navMeshObjects = ['Floor', 'Stair', 'Building']
         this.navigationPlugin.createNavMesh(scene.meshes.filter(el => navMeshObjects.includes(el.metadata?.gltf?.extras?.type)), {
-            cs: 0.2,
+            cs: 0.05,
             ch: 0.1,
-            walkableSlopeAngle: 35,
-            walkableHeight: 1,
-            walkableClimb: .02,
-            walkableRadius: 1,
+            walkableSlopeAngle: 40,
+            walkableHeight: .2,
+            walkableClimb: 1,
+            walkableRadius: 10,
             maxEdgeLen: 12,
             maxSimplificationError: 1.3,
             minRegionArea: 8,
@@ -104,15 +104,26 @@ export default class World {
             detailSampleDist: 6,
             detailSampleMaxError: 1,
             borderSize: 1,
-            tileSize: 20,
+            tileSize: 64
         })
-        const navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.engine.world.scene);
-        const matdebug = new BABYLON.StandardMaterial("matdebug", this.engine.world.scene);
-        matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
-        matdebug.alpha = 0.2;
-        navmeshdebug.material = matdebug;
         this.navigationPlugin.setDefaultQueryExtent(new BABYLON.Vector3(1, 1, 1))
 
+        const obstacles = new Map()
+        window.addEventListener('keydown', e => {
+            if (e.key === 'o') {
+                console.log(obstacles)
+
+                for (const [obstacle, mesh] of obstacles.entries()) {
+                    console.log(obstacle)
+                    this.engine.world.navigationPlugin.removeObstacle(obstacle)
+                    mesh.dispose()
+                }
+                for (const agent of this.engine.zombieManager.crowd.getAgents()) {
+                    console.log(agent)
+                    this.engine.zombieManager.crowd.agentGoto(agent, BABYLON.Vector3.Zero())
+                }
+            }
+        })
 
         for (const mesh of scene.meshes) {
             // if (mesh.name === '__root__') {
@@ -131,17 +142,50 @@ export default class World {
                     break
                 }
                 case 'Door': {
-                    // console.log('createdDoor')
-                    // const sphere = BABYLON.MeshBuilder.CreateSphere('spawner', {
-                    //     diameter: 2,
+                    console.log('createdDoor')
+                    const position = mesh.position.clone()
+                    // position.y = 0
+                    // const diameter = 2
+                    // const height = 2
+                    // const sphere = BABYLON.MeshBuilder.CreateCylinder('spawner', {
+                    //     diameter: diameter,
+                    //     height: height,
                     // })
-                    // sphere.position.copyFrom(mesh.position)
-                    // // this.navigationPlugin.addBoxObstacle(mesh.position, mesh.scaling.clone(), 1.57)
-                    // this.navigationPlugin.addCylinderObstacle(mesh.position, 20, 2)
-                    // break
+                    // sphere.position.copyFrom(position)
+                    // const matdebug = new BABYLON.StandardMaterial("matdebug", this.engine.world.scene);
+                    // matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
+                    // matdebug.alpha = 0.2;
+                    // sphere.material = matdebug;
+                    // this.navigationPlugin.addCylinderObstacle(position, diameter, height)
+
+                    const sphere = BABYLON.MeshBuilder.CreateBox('spawner', {
+                        width: mesh.scaling.x * 2,
+                        height: mesh.scaling.y * 2,
+                        depth: mesh.scaling.z * 2,
+                    })
+                    const rotation = mesh.rotationQuaternion?.toEulerAngles()?.y
+                    sphere.rotation.y = rotation
+                    sphere.position.copyFrom(position)
+                    obstacles.set(
+                        this.navigationPlugin.addBoxObstacle(
+                            position, new BABYLON.Vector3(
+                            mesh.scaling.x * 2, mesh.scaling.y * 2, mesh.scaling.z * 2
+                            ),
+                            rotation
+                        ),
+                        sphere
+                    )
+                    console.log('door added')
+                    break
                 }
             }
         }
+
+        const navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.engine.world.scene);
+        const matdebug = new BABYLON.StandardMaterial("matdebug", this.engine.world.scene);
+        matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
+        matdebug.alpha = 0.2;
+        navmeshdebug.material = matdebug;
 
         this.babylonEngine.runRenderLoop(() => {
             this.engine.dispatchEvent(new CustomEvent('beforeRender', {}))
