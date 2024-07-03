@@ -21,8 +21,8 @@ export default class AbstractZombie extends AbstractEntity {
         this.agentParameters = {
             radius: .5,
             height: 0.2,
-            maxAcceleration: 25.0,
-            maxSpeed: 10.0,
+            maxAcceleration: 1.5,
+            maxSpeed: 2.5,
             collisionQueryRange: 0.5,
             pathOptimizationRange: 0.0,
             separationWeight: 1.0
