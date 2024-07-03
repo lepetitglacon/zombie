@@ -3,6 +3,8 @@
 
 	<ChatEngine ref="chatEngineRef"/>
 
+	<div class="debug-pointer" ref="">{{ pointer }}</div>
+
   <canvas
       ref="canvas"
       class="canvas"
@@ -39,5 +41,9 @@ onMounted(() => {
 .canvas {
   width: 100vw;
   height: 100vh;
+}
+.debug-pointer {
+	position: absolute;
+	color: white;
 }
 </style>

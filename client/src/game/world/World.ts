@@ -54,16 +54,29 @@ export default class World {
     }
 
     bind() {
+        const debugPointer = document.getElementsByClassName('debug-pointer')[0]
+        const debugPointerMesh = BABYLON.MeshBuilder.CreateBox('box', {
+            size: .2
+        })
+
         window.addEventListener("resize", () => {
             this.babylonEngine.resize();
         });
 
-        window.addEventListener("mousemove", () => {
-            var pickinfo = this.scene.pick(this.scene.pointerX, this.scene.pointerY);
+        this.engine.addEventListener('beforeRender', e => {
+            var pickinfo = this.scene.pick(
+                window.innerWidth/2, 
+                window.innerHeight/2,
+                mesh => {
+                    return mesh !== debugPointerMesh
+                }
+            );
             if (pickinfo.hit) {
                 this.pointerTarget.copyFrom(pickinfo.pickedPoint)
+                debugPointer.innerText = this.pointerTarget
+                debugPointerMesh.position.copyFrom(this.pointerTarget)
             }
-        });
+        })
 
         this.scene.onPointerObservable.add((pointerInfo) => {
             switch (pointerInfo.type) {
