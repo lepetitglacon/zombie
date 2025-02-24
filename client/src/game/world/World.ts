@@ -11,37 +11,20 @@ export default class World {
     private engine: GameEngine;
     public scene: any;
     public babylonEngine: BABYLON.Engine;
-    private camera: BABYLON.FlyCamera;
+    private camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
     public navigationPlugin: RecastJSPlugin;
     public pointerTarget = BABYLON.Vector3
 
     constructor({engine}) {
         this.engine = engine
         this.babylonEngine = new BABYLON.Engine(this.engine.canvas, true)
+
         this.scene = new BABYLON.Scene(this.babylonEngine)
+        this.scene.gravity = new BABYLON.Vector3(0, -10, 0); // Adjust gravity strength
 
         this.pointerTarget = new BABYLON.Vector3()
 
-        this.camera = new BABYLON.FlyCamera(
-            "camera11",
-            new BABYLON.Vector3(0, 5, -10),
-            this.scene
-        );
-        this.camera.inertia = 0
-        this.camera.rollCorrect = 2
-        this.camera.setTarget(BABYLON.Vector3.Zero());
 
-
-        // zqsd https://www.toptal.com/developers/keycode
-        this.camera.attachControl(this.engine.canvas, true);
-        this.camera.keysForward = [90]
-        this.camera.keysBackward = [83]
-        this.camera.keysUp = [32]
-        this.camera.keysDown = [16]
-        this.camera.keysLeft = [81]
-        this.camera.keysRight = [68]
-
-        this.camera.speed += 5
 
         const light = new BABYLON.HemisphericLight(
             "light",
@@ -64,18 +47,38 @@ export default class World {
         });
 
         this.engine.addEventListener('beforeRender', e => {
-            var pickinfo = this.scene.pick(
-                window.innerWidth/2, 
-                window.innerHeight/2,
-                mesh => {
-                    return mesh !== debugPointerMesh
-                }
-            );
-            if (pickinfo.hit) {
-                this.pointerTarget.copyFrom(pickinfo.pickedPoint)
-                debugPointer.innerText = this.pointerTarget
-                debugPointerMesh.position.copyFrom(this.pointerTarget)
-            }
+            // var pickinfo = this.scene.pick(
+            //     window.innerWidth/2,
+            //     window.innerHeight/2,
+            //     mesh => {
+            //         return mesh !== debugPointerMesh
+            //     }
+            // );
+            // if (pickinfo.hit) {
+            //     this.pointerTarget.copyFrom(pickinfo.pickedPoint)
+            //     debugPointer.innerText = this.pointerTarget
+            //     debugPointerMesh.position.copyFrom(this.pointerTarget)
+            // }
+
+            // // Raycast downward to detect the navmesh height
+            // let ray = new BABYLON.Ray(this.camera.position, BABYLON.Vector3.Down(), 100);
+            // let hit = this.scene.pickWithRay(ray, (mesh) => {
+            //     // if (mesh.metadata?.gltf?.extras?.type === 'Floor') {
+            //     //     return mesh
+            //     // }
+            //     if (mesh === this.navmeshdebug) {
+            //         return mesh
+            //     }
+            // });
+            //
+            // if (hit.hit) {
+            //     let groundY = hit.pickedPoint.y;
+            //     debugPointer.innerText = this.camera.position
+            //     if (this.camera.position.y < groundY + 1.8) {
+            //         this.camera.position.y = groundY + 1.8; // Keep camera slightly above ground
+            //     }
+            // }
+
         })
 
         this.scene.onPointerObservable.add((pointerInfo) => {
@@ -152,14 +155,11 @@ export default class World {
         })
 
         for (const mesh of scene.meshes) {
-            // if (mesh.name === '__root__') {
-            //     mesh.scaling.x = -1
-            //     // mesh.scaling.y = -1
-            //     // mesh.scaling.z = 1
-            // }
-
             switch (mesh?.metadata?.gltf?.extras?.type) {
-                case 'Spawner': {
+                case 'Floor': {
+                    mesh.checkCollisions = true;
+                    break
+                }case 'Spawner': {
                     const sphere = BABYLON.MeshBuilder.CreateSphere('spawner', {
                         diameter: 0.5,
                     })
@@ -194,11 +194,11 @@ export default class World {
             }
         }
 
-        const navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.engine.world.scene);
-        const matdebug = new BABYLON.StandardMaterial("matdebug", this.engine.world.scene);
-        matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
-        matdebug.alpha = 0.2;
-        navmeshdebug.material = matdebug;
+        this.navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.scene);
+        this.matdebug = new BABYLON.StandardMaterial("matdebug", this.scene);
+        this.matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
+        this.matdebug.alpha = 0.2;
+        this.navmeshdebug.material = this.matdebug;
 
         this.babylonEngine.runRenderLoop(() => {
             this.engine.dispatchEvent(new CustomEvent('beforeRender', {}))
