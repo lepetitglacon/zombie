@@ -77,20 +77,31 @@ export default class ZombieManager extends EventTarget {
     shouldSpawnZombie(now: number) {
         return this.lastSpawn + this.spawnRate < now
             && this.crowd.getAgents().length < this.maxZombies
+            && this.zombies.size < 8
     }
 
     spawn(args: any, now: number = new Date().getTime()): AbstractZombie {
-        const zombie = this.zombieFactory.createZombie({
-            type: 'basic',
-        })
         const position = args?.position ?? this.spawners[randomNumber(0, this.spawners.length-1)].clone() ?? new BABYLON.Vector3()
         position.y -= .5
+        const zombie = this.zombieFactory.createZombie({
+            type: 'basic',
+            // position
+        })
+
+        this.zombies.set(now.toString(), zombie)
 
         zombie.agentId = this.crowd.addAgent(position, zombie.agentParameters, zombie.transform)
         this.crowd.agentGoto(zombie.agentId, this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0)));
 
-        let pathPoints = this.engine.world.navigationPlugin.computePath(position, this.engine.world.navigationPlugin.getClosestPoint(this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
-        const pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: pathPoints, updatable: true}, this.engine.world.scene);
+        zombie.pathPoints = this.engine.world.navigationPlugin.computePath(zombie.transform.position, this.engine.world.navigationPlugin.getClosestPoint(this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
+        if (zombie.pathLine) { zombie.pathLine.dispose() }
+        zombie.pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: zombie.pathPoints, updatable: true}, this.engine.world.scene);
+
+        this.engine.world.scene.onBeforeRenderObservable.add(() => {
+            // zombie.pathPoints = this.engine.world.navigationPlugin.computePath(zombie.transform.position, this.engine.world.navigationPlugin.getClosestPoint(this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
+            // if (zombie.pathLine) { zombie.pathLine.dispose() }
+            // zombie.pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: zombie.pathPoints, updatable: true}, this.engine.world.scene);
+        });
 
         console.log('spawned zombie', zombie.agentId, 'at position', position)
         this.lastSpawn = now

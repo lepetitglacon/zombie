@@ -24,48 +24,21 @@ export default class AbstractZombie extends AbstractEntity {
             height: 1.8,
             maxAcceleration: 1.5,
             maxSpeed: 2.5,
-            collisionQueryRange: 0.5,
+            collisionQueryRange: 1,
             pathOptimizationRange: 0.0,
             separationWeight: 1.0
         }
 
-        var matAgent = new BABYLON.StandardMaterial('mat2', scene);
-        var variation = Math.random();
-        matAgent.diffuseColor = new BABYLON.Color3(0.4 + variation * 0.6, 0.3, 1.0 - variation * 0.3);
-
-        this.hitbox = BABYLON.MeshBuilder.CreateBox("box", {
-            size: 1
+        this.hitbox = BABYLON.MeshBuilder.CreateCapsule("box", {
+            height: this.agentParameters.height,
+            radius: this.agentParameters.radius
         }, scene);
-
-        this.physicsImpostor = new BABYLON.PhysicsImpostor(
-            this.hitbox,
-            BABYLON.PhysicsImpostor.BoxImpostor, {
-                mass: 10,
-                friction: 0.5,
-                restitution: 0,
-                nativeOptions: {
-                    type: CANNON.Body.STATIC
-                }
-            },
-            scene
-        );
-
-        // scene.onBeforeRenderObservable.add(() => {
-        //     let targetPosition = new BABYLON.Vector3();
-        //     let path = this.engine.computePath(this.hitbox.position, targetPosition);
-        //
-        //     if (path.length > 0) {
-        //         let nextStep = path[0];
-        //         let moveDirection = nextStep.subtract(this.hitbox.position).normalize().scale(0.05);
-        //
-        //         this.physicsImpostor.setLinearVelocity(moveDirection);
-        //     }
-        // });
-
-        // this.hitbox.material = matAgent;
 
         this.transform = new BABYLON.TransformNode('transform');
         this.hitbox.parent = this.transform;
+
+        this.pathPoints = null
+        this.pathLine = null
 
     }
 

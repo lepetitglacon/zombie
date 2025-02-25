@@ -7,6 +7,7 @@ import { RecastJSPlugin } from "@babylonjs/core/Navigation/Plugins/recastJSPlugi
 import Recast from "recast-detour";
 import '@babylonjs/loaders';
 import type GameEngine from "@/game/GameEngine";
+import {Mesh} from "@babylonjs/core";
 
 
 export default class World {
@@ -17,6 +18,7 @@ export default class World {
     public navigationPlugin: RecastJSPlugin;
     public physicsPlugin: BABYLON.CannonJSPlugin
     public pointerTarget = BABYLON.Vector3
+    private obstacles: Map<BABYLON.IObstacle, Mesh>;
 
     constructor({engine}) {
         this.engine = engine
@@ -61,12 +63,12 @@ export default class World {
         this.navigationPlugin = new RecastJSPlugin(recast);
         const navMeshObjects = ['Floor', 'Stair', 'Building']
         this.navigationPlugin.createNavMesh(scene.meshes.filter(el => navMeshObjects.includes(el.metadata?.gltf?.extras?.type)), {
-            cs: 0.2,
-            ch: 0.2,
-            walkableSlopeAngle: 35,
+            cs: 0.1,
+            ch: 0.1,
+            walkableSlopeAngle: 45,
             walkableHeight: 1,
             walkableClimb: 1,
-            walkableRadius: 1,
+            walkableRadius: 5,
             maxEdgeLen: 12,
             maxSimplificationError: 1.3,
             minRegionArea: 8,
@@ -83,45 +85,6 @@ export default class World {
             switch (mesh?.metadata?.gltf?.extras?.type) {
                 case 'Floor': {
 
-                    const floor = BABYLON.MeshBuilder.CreateGround(
-                        "ground",
-                        {
-                            width: 100,
-                            height: 100,
-                        },
-                        this.scene
-                    );
-
-                    const floorImpostor = new BABYLON.PhysicsImpostor(
-                        floor,
-                        BABYLON.PhysicsImpostor.BoxImpostor,
-                        {
-                            mass: 0,
-
-                        },
-                        this.scene
-                    );
-
-                    const bool = BABYLON.MeshBuilder.CreateSphere(
-                        "bool",
-                        {
-                            diameter: 5,
-                        },
-                        this.scene
-                    );
-                    bool.position.y = 1
-                    const boolImpostor = new BABYLON.PhysicsImpostor(
-                        bool,
-                        BABYLON.PhysicsImpostor.SphereImpostor,
-                        {
-                            mass: 10,
-                            nativeOptions: {
-                                type: CANNON.Body.KINEMATIC
-                            }
-                        },
-                        this.scene
-                    );
-
                     break
                 }case 'Spawner': {
                     const sphere = BABYLON.MeshBuilder.CreateSphere('spawner', {
@@ -132,11 +95,12 @@ export default class World {
                     break
                 }
                 case 'Door': {
+                    const scale = 2
                     const position = mesh.position.clone()
                     const sphere = BABYLON.MeshBuilder.CreateBox('spawner', {
-                        width: mesh.scaling.x * 2,
-                        height: mesh.scaling.y * 2,
-                        depth: mesh.scaling.z * 2,
+                        width: mesh.scaling.x * scale,
+                        height: mesh.scaling.y * scale,
+                        depth: mesh.scaling.z * scale,
                     })
                     const rotation = mesh.rotationQuaternion?.toEulerAngles()?.y ?? 0
                     sphere.rotation.y = rotation
@@ -145,9 +109,9 @@ export default class World {
                     this.obstacles.set(
                         this.navigationPlugin.addBoxObstacle(
                             position, new BABYLON.Vector3(
-                                mesh.scaling.x * 2,
-                                mesh.scaling.y * 2,
-                                mesh.scaling.z * 2
+                                mesh.scaling.x * scale,
+                                mesh.scaling.y * scale,
+                                mesh.scaling.z * scale
                             ),
                             rotation
                         ),
@@ -161,7 +125,7 @@ export default class World {
         this.navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.scene);
         this.matdebug = new BABYLON.StandardMaterial("matdebug", this.scene);
         this.matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
-        this.matdebug.alpha = 0.2;
+        this.matdebug.alpha = 0.1;
         this.navmeshdebug.material = this.matdebug;
 
         this.babylonEngine.runRenderLoop(() => {
