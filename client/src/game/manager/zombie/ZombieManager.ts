@@ -18,7 +18,7 @@ export default class ZombieManager extends EventTarget {
     public zombies: Map<string, AbstractZombie>;
     public maxZombies: number;
     private zombieFactory: ZombieFactory;
-    public crowd: any;
+    public crowd: BABYLON.ICrowd;
 
     constructor({engine}) {
         super();
@@ -35,7 +35,6 @@ export default class ZombieManager extends EventTarget {
         this.zombies = new Map<string, AbstractZombie>()
 
         this.engine.commandManager.registerCommand('spawn:zombie', (args: any) => {
-
             if (this.engine.world.pointerTarget) {
                 args.position = this.engine.world.pointerTarget.clone()
             }
@@ -86,14 +85,14 @@ export default class ZombieManager extends EventTarget {
         })
         const position = args?.position ?? this.spawners[randomNumber(0, this.spawners.length-1)].clone() ?? new BABYLON.Vector3()
         position.y -= .5
+
         zombie.agentId = this.crowd.addAgent(position, zombie.agentParameters, zombie.transform)
-        // this.crowd.agentTeleport(zombie.agentId, this.engine.world.navigationPlugin.getClosestPoint(zombie.position))
         this.crowd.agentGoto(zombie.agentId, this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0)));
-        console.log('spawned zombie', zombie.agentId, 'at position', position)
 
         let pathPoints = this.engine.world.navigationPlugin.computePath(position, this.engine.world.navigationPlugin.getClosestPoint(this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
         const pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: pathPoints, updatable: true}, this.engine.world.scene);
 
+        console.log('spawned zombie', zombie.agentId, 'at position', position)
         this.lastSpawn = now
         return zombie
     }
