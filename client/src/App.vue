@@ -3,6 +3,8 @@
 
 	<ChatEngine ref="chatEngineRef"/>
 
+  <div style="position: absolute; color: white">{{playerPosition}}</div>
+
 	<div class="debug-pointer" ref="">{{ pointer }}</div>
 
   <canvas
@@ -13,8 +15,6 @@
   >
   </canvas>
 
-
-<!--  <RouterView />-->
 </template>
 
 <script setup lang="ts">
@@ -27,11 +27,13 @@ import ChatEngine from "@/components/ChatEngine/ChatEngine.vue";
 
 const canvas = ref()
 const chatEngineRef = ref()
+const playerPosition = ref()
 
 onMounted(() => {
   const gameEngine = new GameEngine({
 	  canvas: canvas.value,
 	  chatEngineRef: chatEngineRef,
+    playerPosition: playerPosition,
   })
   gameEngine.init()
 })

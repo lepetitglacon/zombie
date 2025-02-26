@@ -7,66 +7,133 @@ import { RecastJSPlugin } from "@babylonjs/core/Navigation/Plugins/recastJSPlugi
 import Recast from "recast-detour";
 import '@babylonjs/loaders';
 import type GameEngine from "@/game/GameEngine";
-import {Mesh} from "@babylonjs/core";
+import {Mesh, Vector3} from "@babylonjs/core";
 import {Player} from "@/game/entity/Player";
 
 
 export default class World {
     private engine: GameEngine;
-    public scene: any;
+    public scene: BABYLON.Scene;
     public babylonEngine: BABYLON.Engine;
-    private camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
+    public camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
     public navigationPlugin: RecastJSPlugin;
     public physicsPlugin: BABYLON.CannonJSPlugin
     public pointerTarget = BABYLON.Vector3
-    private obstacles: Map<BABYLON.IObstacle, Mesh>;
+    public obstacles: Map<BABYLON.IObstacle, Mesh>;
+    public player: Player;
 
     constructor({engine}) {
         this.engine = engine
         this.babylonEngine = new BABYLON.Engine(this.engine.canvas, true)
+        this.babylonEngine.maxFPS = 60
         this.scene = new BABYLON.Scene(this.babylonEngine)
+        this.scene.collisionsEnabled = true
+        this.scene.gravity.set(0, -10/this.babylonEngine.maxFPS, 0)
+
+        this.loadMap()
+
+        const flyCamera = new BABYLON.FlyCamera(
+            "fly-camera",
+            new BABYLON.Vector3(0, 10, -10),
+            this.scene
+        )
+        flyCamera.keysForward = [90]
+        flyCamera.keysBackward = [83]
+        flyCamera.keysUp = [32]
+        flyCamera.keysDown = [16]
+        flyCamera.keysLeft = [81]
+        flyCamera.keysRight = [68]
+        flyCamera.rollCorrect = 2
+        // // flyCamera.speed = 0.2; // Move speed
+        // flyCamera.angularSensibility = 2000; // Mouse sensitivity
+
+        const camera = new BABYLON.UniversalCamera(
+            "universal-camera",
+            new BABYLON.Vector3(0, 10, -10),
+            this.scene
+        )
+        this.scene.activeCamera = camera
+        camera.attachControl(this.engine.canvas, true); // Attach again
+        // camera.keysForward = [90]
+        // camera.keysBackward = [83]
+        camera.keysUp = [90]
+        camera.keysDown = [83]
+        camera.keysLeft = [81]
+        camera.keysRight = [68]
+        camera.speed = 2; // Move speed
+        camera.inertia = 0.2;
+        camera.angularSensibility = 1500; // Mouse sensitivity
+        camera.needMoveForGravity = true
+        camera.checkCollisions = true;
+        camera.applyGravity = true;
+        camera.ellipsoid = new BABYLON.Vector3(1.1, 1.8, 1.1);
+        camera.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0); // Lift collision point
+
+        this.scene.actionManager = new BABYLON.ActionManager(this.scene);
+        this.scene.actionManager.registerAction(
+            new BABYLON.ExecuteCodeAction(
+                BABYLON.ActionManager.OnKeyDownTrigger,
+                (evt) => {
+                    if (evt.sourceEvent.key === 'c') {
+                        this.scene.activeCamera.detachControl()
+                        this.scene.activeCamera = this.scene.activeCamera === camera ? flyCamera : camera
+                        this.scene.activeCamera.attachControl(this.engine.canvas, true); // Attach again
+                    }
+
+                    // console.log("Key pressed:", evt.sourceEvent.key);
+                    // const dir = this.engine.cameraManager.camera.getDirection(Vector3.Forward())
+                    // console.log(dir)
+                    // this.engine.cameraManager.camera.position.addInPlace(dir.scaleInPlace(5))
+                }
+            )
+        );
 
         // Inspector.Show(this.scene, {})
 
-        window.CANNON = CANNON;
-        const gravityVector = new BABYLON.Vector3(0,-9.81, 0);
-        this.physicsPlugin = new BABYLON.CannonJSPlugin();
-        this.scene.enablePhysics(gravityVector, this.physicsPlugin)
-
+        // window.CANNON = CANNON;
+        // const gravityVector = new BABYLON.Vector3(0,-9.81, 0);
+        // this.physicsPlugin = new BABYLON.CannonJSPlugin();
+        // this.scene.enablePhysics(gravityVector, this.physicsPlugin)
+        //
         this.obstacles = new Map()
-
-        this.pointerTarget = new BABYLON.Vector3()
-
-
-
+        //
+        // this.pointerTarget = new BABYLON.Vector3()
+        //
         const light = new BABYLON.HemisphericLight(
             "light",
             new BABYLON.Vector3(0, 1, 0),
             this.scene
         );
         light.intensity = 0.7;
+        //
+        // this.bind()
 
-        this.bind()
+        this.babylonEngine.runRenderLoop(() => {
+            // this.engine.dispatchEvent(new CustomEvent('beforeRender', {}))
+
+            const otherCam = this.scene.activeCamera === camera ? flyCamera : camera
+            otherCam.position.copyFrom(this.scene.activeCamera.position)
+            otherCam.rotation.copyFrom(this.scene.activeCamera.rotation)
+
+            this.scene.render();
+        });
     }
 
     async init() {
-        this.player = new Player({engine: this.engine})
-        this.scene.onBeforeRenderObservable.add(() => {
-            this.engine.cameraManager.camera.position.copyFrom(this.player.mesh.position);
-            // TODO bouger l'object player avec les event
-        });
+        // this.player = new Player({engine: this.engine})
+
+    }
+
+    async loadMap() {
+        const recast = await Recast();
+        this.navigationPlugin = new RecastJSPlugin(recast);
+        console.log(this.navigationPlugin)
 
         const filename = mapGltf.substring(mapGltf.lastIndexOf('/') + 1)
         const path = mapGltf.substring(0, mapGltf.lastIndexOf('/') + 1)
         const scene = await BABYLON.SceneLoader.AppendAsync(path, filename);
 
-        const gltfRoot = scene.getMeshById('__root__')
-        if (gltfRoot) {
-            gltfRoot.scaling.x = -1
-        }
-
-        const recast = await Recast();
-        this.navigationPlugin = new RecastJSPlugin(recast);
+        // NAVMESH
         const navMeshObjects = ['Floor', 'Stair', 'Building']
         this.navigationPlugin.createNavMesh(scene.meshes.filter(el => navMeshObjects.includes(el.metadata?.gltf?.extras?.type)), {
             cs: 0.2,
@@ -87,7 +154,14 @@ export default class World {
         // console.log(this.navigationPlugin.getNavmeshData())
         this.navigationPlugin.setDefaultQueryExtent(new BABYLON.Vector3(1, 1, 1))
 
+        this.navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.scene);
+        this.matdebug = new BABYLON.StandardMaterial("matdebug", this.scene);
+        this.matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
+        this.matdebug.alpha = 0.1;
+        this.navmeshdebug.material = this.matdebug;
+
         for (const mesh of scene.meshes) {
+            mesh.checkCollisions = true
             switch (mesh?.metadata?.gltf?.extras?.type) {
                 case 'Floor': {
                     const floor = BABYLON.MeshBuilder.CreateGround(
@@ -98,22 +172,20 @@ export default class World {
                         },
                         this.scene
                     );
-                    const floorImpostor = new BABYLON.PhysicsImpostor(
-                        floor,
-                        BABYLON.PhysicsImpostor.PlaneImpostor,
-                        {
-                            mass: 0,
+                    floor.checkCollisions = true
+                    floor.position.y = 0
 
-                        },
-                        this.scene
-                    );
+                    mesh.dispose()
+                    // floor.position.copyFrom(mesh.position)
+                    // console.log(mesh.position, floor.position)
                     break
-                }case 'Spawner': {
+                }
+                case 'Spawner': {
                     const sphere = BABYLON.MeshBuilder.CreateSphere('spawner', {
                         diameter: 0.5,
                     })
                     sphere.position.copyFrom(mesh.position)
-                    this.engine.zombieManager.dispatchEvent(new CustomEvent('registerSpawner', {detail: {position: mesh.position.clone()}}))
+                    // this.engine.zombieManager.dispatchEvent(new CustomEvent('registerSpawner', {detail: {position: mesh.position.clone()}}))
                     break
                 }
                 case 'Door': {
@@ -124,6 +196,7 @@ export default class World {
                         height: mesh.scaling.y * scale,
                         depth: mesh.scaling.z * scale,
                     })
+                    door.checkCollisions = true
                     const rotation = mesh.rotationQuaternion?.toEulerAngles()?.y ?? 0
                     door.rotation.y = rotation
                     door.position.copyFrom(position)
@@ -142,24 +215,13 @@ export default class World {
                     )
                     break
                 }
+                default: {
+                    // mesh.scaling.y +=1
+                    break
+                }
             }
         }
-
-        this.navmeshdebug = this.navigationPlugin.createDebugNavMesh(this.scene);
-        this.matdebug = new BABYLON.StandardMaterial("matdebug", this.scene);
-        this.matdebug.diffuseColor = new BABYLON.Color3(0.1, 0.2, 1);
-        this.matdebug.alpha = 0.1;
-        this.navmeshdebug.material = this.matdebug;
-
-        this.babylonEngine.runRenderLoop(() => {
-            this.engine.dispatchEvent(new CustomEvent('beforeRender', {}))
-            this.scene.render();
-        });
-
-
     }
-
-
 
     bind() {
         const debugPointer = document.getElementsByClassName('debug-pointer')[0]
@@ -206,6 +268,7 @@ export default class World {
         })
 
         window.addEventListener('keydown', e => {
+
             if (e.key === 'o') {
                 console.log(this.obstacles)
 

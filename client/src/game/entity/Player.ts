@@ -1,8 +1,12 @@
 import * as BABYLON from "@babylonjs/core";
+import * as CANNON from "cannon-es";
 import type GameEngine from "@/game/GameEngine";
+import {type Mesh, PhysicsImpostor} from "@babylonjs/core";
 
 export class Player {
     private engine: GameEngine;
+    mesh: Mesh;
+    body: PhysicsImpostor;
 
     constructor({engine}) {
 
@@ -21,7 +25,10 @@ export class Player {
             this.mesh,
             BABYLON.PhysicsImpostor.CylinderImpostor,
             {
-                mass: 80
+                mass: 80,
+                nativeOptions: {
+                    type: CANNON.BODY_TYPES.KINEMATIC
+                }
             },
             this.engine.world.scene
         )
