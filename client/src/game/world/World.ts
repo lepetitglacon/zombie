@@ -8,6 +8,7 @@ import Recast from "recast-detour";
 import '@babylonjs/loaders';
 import type GameEngine from "@/game/GameEngine";
 import {Mesh} from "@babylonjs/core";
+import {Player} from "@/game/entity/Player";
 
 
 export default class World {
@@ -49,6 +50,11 @@ export default class World {
     }
 
     async init() {
+        this.player = new Player({engine: this.engine})
+        this.scene.onBeforeRenderObservable.add(() => {
+            this.engine.cameraManager.camera.position.copyFrom(this.player.mesh.position);
+            // TODO bouger l'object player avec les event
+        });
 
         const filename = mapGltf.substring(mapGltf.lastIndexOf('/') + 1)
         const path = mapGltf.substring(0, mapGltf.lastIndexOf('/') + 1)
@@ -84,7 +90,23 @@ export default class World {
         for (const mesh of scene.meshes) {
             switch (mesh?.metadata?.gltf?.extras?.type) {
                 case 'Floor': {
+                    const floor = BABYLON.MeshBuilder.CreateGround(
+                        "ground",
+                        {
+                            width: 100,
+                            height: 100,
+                        },
+                        this.scene
+                    );
+                    const floorImpostor = new BABYLON.PhysicsImpostor(
+                        floor,
+                        BABYLON.PhysicsImpostor.PlaneImpostor,
+                        {
+                            mass: 0,
 
+                        },
+                        this.scene
+                    );
                     break
                 }case 'Spawner': {
                     const sphere = BABYLON.MeshBuilder.CreateSphere('spawner', {
@@ -133,6 +155,8 @@ export default class World {
             this.engine.dispatchEvent(new CustomEvent('beforeRender', {}))
             this.scene.render();
         });
+
+
     }
 
 

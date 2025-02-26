@@ -60,9 +60,6 @@ export default class ZombieManager extends EventTarget {
             this.spawn(args)
         })
         this.engine.addEventListener('beforeRender', (e) => {
-
-
-
             const now = new Date().getTime()
             if (this.shouldSpawnZombie(now)) {
                 this.spawn({}, now)
