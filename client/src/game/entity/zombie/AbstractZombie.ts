@@ -26,13 +26,14 @@ export default class AbstractZombie extends AbstractEntity {
             maxSpeed: 2.5,
             collisionQueryRange: 1,
             pathOptimizationRange: 0.0,
-            separationWeight: 1.0
+            separationWeight: 1.0,
         }
 
         this.hitbox = BABYLON.MeshBuilder.CreateCapsule("box", {
             height: this.agentParameters.height,
             radius: this.agentParameters.radius
         }, scene);
+        this.hitbox.position.y += this.agentParameters.height / 2;
 
         this.transform = new BABYLON.TransformNode('transform');
         this.hitbox.parent = this.transform;

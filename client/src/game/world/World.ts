@@ -63,16 +63,16 @@ export default class World {
         this.navigationPlugin = new RecastJSPlugin(recast);
         const navMeshObjects = ['Floor', 'Stair', 'Building']
         this.navigationPlugin.createNavMesh(scene.meshes.filter(el => navMeshObjects.includes(el.metadata?.gltf?.extras?.type)), {
-            cs: 0.1,
-            ch: 0.1,
-            walkableSlopeAngle: 45,
-            walkableHeight: 1,
+            cs: 0.2,
+            ch: 0.2,
+            walkableSlopeAngle: 35,
+            walkableHeight: 1.5,
             walkableClimb: 1,
-            walkableRadius: 5,
+            walkableRadius: 1.5,
             maxEdgeLen: 12,
-            maxSimplificationError: 1.3,
+            maxSimplificationError: 1,
             minRegionArea: 8,
-            mergeRegionArea: 20,
+            mergeRegionArea: 50,
             maxVertsPerPoly: 6,
             detailSampleDist: 6,
             detailSampleMaxError: 1,
@@ -97,25 +97,26 @@ export default class World {
                 case 'Door': {
                     const scale = 2
                     const position = mesh.position.clone()
-                    const sphere = BABYLON.MeshBuilder.CreateBox('spawner', {
+                    const door = BABYLON.MeshBuilder.CreateBox('door', {
                         width: mesh.scaling.x * scale,
                         height: mesh.scaling.y * scale,
                         depth: mesh.scaling.z * scale,
                     })
                     const rotation = mesh.rotationQuaternion?.toEulerAngles()?.y ?? 0
-                    sphere.rotation.y = rotation
-                    sphere.position.copyFrom(position)
+                    door.rotation.y = rotation
+                    door.position.copyFrom(position)
 
                     this.obstacles.set(
                         this.navigationPlugin.addBoxObstacle(
-                            position, new BABYLON.Vector3(
+                            position,
+                            new BABYLON.Vector3(
                                 mesh.scaling.x * scale,
                                 mesh.scaling.y * scale,
                                 mesh.scaling.z * scale
                             ),
                             rotation
                         ),
-                        sphere
+                        door
                     )
                     break
                 }
