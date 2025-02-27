@@ -1,18 +1,15 @@
+import GameEngine from "@/game/GameEngine";
 import BasicZombie from "@/game/entity/zombie/BasicZombie";
 
 export default class ZombieFactory {
-    private engine: any;
-
-    constructor({engine}) {
-        this.engine = engine
-    }
+    constructor() {}
 
     createZombie(conf = {}) {
 
         let zombie
         switch (conf?.type) {
             default:
-                zombie = new BasicZombie(this.engine.world.scene)
+                zombie = new BasicZombie(GameEngine.world.scene)
                 break
         }
 

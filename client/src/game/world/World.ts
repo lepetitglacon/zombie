@@ -6,26 +6,30 @@ import { Inspector } from '@babylonjs/inspector'
 import { RecastJSPlugin } from "@babylonjs/core/Navigation/Plugins/recastJSPlugin";
 import Recast from "recast-detour";
 import '@babylonjs/loaders';
-import type GameEngine from "@/game/GameEngine";
-import {Mesh} from "@babylonjs/core";
+import GameEngine from "@/game/GameEngine";
+import {Mesh, Observable, Vector3} from "@babylonjs/core";
 import {Player} from "@/game/entity/Player";
 
 
 export default class World {
-    private engine: GameEngine;
-    public scene: any;
+    public scene: BABYLON.Scene;
     public babylonEngine: BABYLON.Engine;
     private camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
     public navigationPlugin: RecastJSPlugin;
     public physicsPlugin: BABYLON.CannonJSPlugin
     public pointerTarget = BABYLON.Vector3
     private obstacles: Map<BABYLON.IObstacle, Mesh>;
+    public onWorldMeshAdd: Observable;
 
-    constructor({engine}) {
-        this.engine = engine
-        this.babylonEngine = new BABYLON.Engine(this.engine.canvas, true)
+    constructor() {
+        this.babylonEngine = new BABYLON.Engine(GameEngine.canvas, true)
         this.scene = new BABYLON.Scene(this.babylonEngine)
 
+        this.onWorldMeshAdd = new Observable()
+
+        this.ray = new BABYLON.Ray(Vector3.Zero(), Vector3.Zero(), 50);
+        const rayHelper = new BABYLON.RayHelper(this.ray);
+        rayHelper.show(this.scene);
         // Inspector.Show(this.scene, {})
 
         window.CANNON = CANNON;
@@ -50,11 +54,7 @@ export default class World {
     }
 
     async init() {
-        this.player = new Player({engine: this.engine})
-        this.scene.onBeforeRenderObservable.add(() => {
-            this.engine.cameraManager.camera.position.copyFrom(this.player.mesh.position);
-            // TODO bouger l'object player avec les event
-        });
+        this.player = new Player({engine: GameEngine})
 
         const filename = mapGltf.substring(mapGltf.lastIndexOf('/') + 1)
         const path = mapGltf.substring(0, mapGltf.lastIndexOf('/') + 1)
@@ -88,6 +88,11 @@ export default class World {
         this.navigationPlugin.setDefaultQueryExtent(new BABYLON.Vector3(1, 1, 1))
 
         for (const mesh of scene.meshes) {
+            this.onWorldMeshAdd.notifyObservers({
+                mesh,
+                type: mesh?.metadata?.gltf?.extras?.type
+            })
+
             switch (mesh?.metadata?.gltf?.extras?.type) {
                 case 'Floor': {
                     const floor = BABYLON.MeshBuilder.CreateGround(
@@ -113,7 +118,7 @@ export default class World {
                         diameter: 0.5,
                     })
                     sphere.position.copyFrom(mesh.position)
-                    this.engine.zombieManager.dispatchEvent(new CustomEvent('registerSpawner', {detail: {position: mesh.position.clone()}}))
+                    // GameEngine.zombieManager.dispatchEvent(new CustomEvent('registerSpawner', {detail: {position: mesh.position.clone()}}))
                     break
                 }
                 case 'Door': {
@@ -152,7 +157,6 @@ export default class World {
         this.navmeshdebug.material = this.matdebug;
 
         this.babylonEngine.runRenderLoop(() => {
-            this.engine.dispatchEvent(new CustomEvent('beforeRender', {}))
             this.scene.render();
         });
 
@@ -171,62 +175,19 @@ export default class World {
             this.babylonEngine.resize();
         });
 
-        this.engine.addEventListener('beforeRender', e => {
-            // var pickinfo = this.scene.pick(
-            //     window.innerWidth/2,
-            //     window.innerHeight/2,
-            //     mesh => {
-            //         return mesh !== debugPointerMesh
-            //     }
-            // );
-            // if (pickinfo.hit) {
-            //     this.pointerTarget.copyFrom(pickinfo.pickedPoint)
-            //     debugPointer.innerText = this.pointerTarget
-            //     debugPointerMesh.position.copyFrom(this.pointerTarget)
-            // }
-
-            // // Raycast downward to detect the navmesh height
-            // let ray = new BABYLON.Ray(this.camera.position, BABYLON.Vector3.Down(), 100);
-            // let hit = this.scene.pickWithRay(ray, (mesh) => {
-            //     // if (mesh.metadata?.gltf?.extras?.type === 'Floor') {
-            //     //     return mesh
-            //     // }
-            //     if (mesh === this.navmeshdebug) {
-            //         return mesh
-            //     }
-            // });
-            //
-            // if (hit.hit) {
-            //     let groundY = hit.pickedPoint.y;
-            //     debugPointer.innerText = this.camera.position
-            //     if (this.camera.position.y < groundY + 1.8) {
-            //         this.camera.position.y = groundY + 1.8; // Keep camera slightly above ground
-            //     }
-            // }
-        })
-
         window.addEventListener('keydown', e => {
             if (e.key === 'o') {
                 console.log(this.obstacles)
 
                 for (const [obstacle, mesh] of this.obstacles.entries()) {
                     console.log(obstacle)
-                    this.engine.world.navigationPlugin.removeObstacle(obstacle)
+                    GameEngine.world.navigationPlugin.removeObstacle(obstacle)
                     mesh.dispose()
                 }
-                for (const agent of this.engine.zombieManager.crowd.getAgents()) {
+                for (const agent of GameEngine.zombieManager.crowd.getAgents()) {
                     console.log(agent)
-                    this.engine.zombieManager.crowd.agentGoto(agent, BABYLON.Vector3.Zero())
+                    GameEngine.zombieManager.crowd.agentGoto(agent, BABYLON.Vector3.Zero())
                 }
-            }
-        })
-
-        this.scene.onPointerObservable.add((pointerInfo) => {
-            switch (pointerInfo.type) {
-                case BABYLON.PointerEventTypes.POINTERDOWN:
-                    if(pointerInfo.pickInfo.hit) {
-                    }
-                    break;
             }
         })
     }

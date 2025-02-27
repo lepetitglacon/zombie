@@ -1,17 +1,15 @@
-import type GameEngine from "@/game/GameEngine";
+import GameEngine from "@/game/GameEngine";
 import Message from "@/types/ChatEngine/Message";
 
 export default class CommandManager {
-    public engine: GameEngine;
     public commands: Map<string, Function>
     public commandHistory: Array<string>
     private chat: any;
 
-    constructor({engine}) {
-        this.engine = engine
+    constructor() {
         this.commands = new Map<string, Function>()
         this.commandHistory = []
-        this.chat = this.engine.chatEngineRef
+        this.chat = GameEngine.chatEngineRef
 
         this.registerCommand('test', (args: Array<string>) => {
             return 'test command working with args: ' + args.join(' | ')
