@@ -31,10 +31,12 @@ class Gun {
     private name: string;
     model: BABYLON.Mesh;
     private shotBullets: Ray[];
+    private maxRecoilAngle: number;
 
     constructor({name}) {
         this.name = name
         this.shotBullets = []
+        this.maxRecoilAngle = -0.3
 
         const mat = new BABYLON.StandardMaterial("test", GameEngine.world.scene);
         mat.alpha = 1;
@@ -48,6 +50,10 @@ class Gun {
         this.model.parent = GameEngine.cameraManager.camera
         this.model.position = new Vector3(.5, -.3, 1.1)
         this.model.material = mat
+
+        GameEngine.eventManager.onCameraChange.add((e) => {
+            this.model.parent = e.camera
+        })
 
         GameEngine.world.scene.onPointerObservable.add((e: PointerInfo) => {
             if (e.type === BABYLON.PointerEventTypes.POINTERDOWN) {
@@ -77,6 +83,7 @@ class Gun {
         }, GameEngine.world.scene)
         box.position.copyFrom(pos.add(dir.scale(50)))
 
+        if (this.model.rotation.x > this.maxRecoilAngle)
         this.model.rotation.x -= 0.1;
     }
 

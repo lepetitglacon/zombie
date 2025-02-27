@@ -15,7 +15,7 @@
     "@babylonjs/core": "^7.50.0",
     "@babylonjs/gui": "^7.13.0",
     "@babylonjs/inspector": "^7.50.0",
-    "@babylonjs/loaders": "^7.11.3",
+    "@babylonjs/loaders": "^7.51.0",
     "cannon-es": "^0.20.0",
     "cannon-es-debugger": "^1.0.0",
     "pinia": "^2.1.7",

@@ -8,12 +8,14 @@ import CameraManager from "@/game/manager/camera/CameraManager";
 import GunManager from "@/game/manager/gun/GunManager";
 import type {Ref} from "vue";
 import {Vector3} from "@babylonjs/core";
+import EventManager from "@/game/manager/event/EventManager";
 
  class GameEngine {
 
     public canvas: HTMLCanvasElement;
     public world: World;
     public chatEngineRef: any;
+    public eventManager: EventManager;
     public commandManager: CommandManager;
     public cameraManager: CameraManager;
     public zombieManager: ZombieManager;
@@ -28,10 +30,9 @@ import {Vector3} from "@babylonjs/core";
     }
 
     async init() {
-        // Game
         this.world = new World()
-        this.gui = new Gui()
-        // this.mapEditor = new MapEditor({engine: this})
+
+        this.eventManager = new EventManager()
 
         // Managers
         this.cameraManager = new CameraManager()
@@ -39,6 +40,12 @@ import {Vector3} from "@babylonjs/core";
         this.zombieManager = new ZombieManager()
         this.gunManager = new GunManager()
 
+        // Game
+        this.gui = new Gui()
+        // this.mapEditor = new MapEditor({engine: this})
+
+
+        await this.world.loadMap()
         await this.world.init()
         // await this.mapEditor.init()
         await this.zombieManager.init() //todo mettre navmesh ici
