@@ -1,12 +1,11 @@
-import type GameEngine from "@/game/GameEngine";
+import GameEngine from "@/game/GameEngine";
 import {type Ref, ref, type UnwrapRef} from "vue";
 import type AbstractZombie from "@/game/entity/zombie/AbstractZombie";
 import ZombieFactory from "@/game/entity/zombie/ZombieFactory";
 import * as BABYLON from '@babylonjs/core'
 import { randomNumber } from '../../utils/random.js'
 
-export default class ZombieManager extends EventTarget {
-    private engine: GameEngine;
+export default class ZombieManager {
 
     private currentWave: Ref<UnwrapRef<number>>;
 
@@ -20,11 +19,8 @@ export default class ZombieManager extends EventTarget {
     private zombieFactory: ZombieFactory;
     public crowd: BABYLON.ICrowd;
 
-    constructor({engine}) {
-        super();
-        this.engine = engine
-
-        this.zombieFactory = new ZombieFactory({engine: engine})
+    constructor() {
+        this.zombieFactory = new ZombieFactory()
 
         this.currentWave = ref(0)
         this.spawners = []
@@ -34,9 +30,9 @@ export default class ZombieManager extends EventTarget {
         this.maxZombies = 8
         this.zombies = new Map<string, AbstractZombie>()
 
-        this.engine.commandManager.registerCommand('spawn:zombie', (args: any) => {
-            if (this.engine.world.pointerTarget) {
-                args.position = this.engine.world.pointerTarget.clone()
+        GameEngine.commandManager.registerCommand('spawn:zombie', (args: any) => {
+            if (GameEngine.world.pointerTarget) {
+                args.position = GameEngine.world.pointerTarget.clone()
             }
             const zombie = this.spawn(args)
             console.log('zombie created', zombie)
@@ -47,19 +43,21 @@ export default class ZombieManager extends EventTarget {
     }
 
     bind() {
-        this.addEventListener('registerSpawner', (e) => {
-            const pos = e.detail.position
-            // pos.y = 0
-            const sphere = BABYLON.MeshBuilder.CreateSphere('spawner', {
-                diameter: 0.5,
-            })
-            sphere.position.copyFrom(pos)
-            this.spawners.push(pos)
+        GameEngine.world.onWorldMeshAdd.add((e) => {
+            if (e.type === 'Spawner') {
+                const pos = e.mesh.position
+                // pos.y = 0
+                const sphere = BABYLON.MeshBuilder.CreateSphere('spawner', {
+                    diameter: 0.5,
+                })
+                sphere.position.copyFrom(pos)
+                this.spawners.push(pos)
+            }
         })
-        this.addEventListener('spawn:zombie', (args: any) => {
-            this.spawn(args)
-        })
-        this.engine.addEventListener('beforeRender', (e) => {
+        // this.addEventListener('spawn:zombie', (args: any) => {
+        //     this.spawn(args)
+        // })
+        GameEngine.world.scene.onBeforeRenderObservable.add((e) => {
             const now = new Date().getTime()
             if (this.shouldSpawnZombie(now)) {
                 this.spawn({}, now)
@@ -68,7 +66,7 @@ export default class ZombieManager extends EventTarget {
     }
 
     init() {
-        this.crowd = this.engine.world.navigationPlugin.createCrowd(this.maxZombies, .5, this.engine.world.scene);
+        this.crowd = GameEngine.world.navigationPlugin.createCrowd(this.maxZombies, .5, GameEngine.world.scene);
     }
 
     shouldSpawnZombie(now: number) {
@@ -88,16 +86,16 @@ export default class ZombieManager extends EventTarget {
         this.zombies.set(now.toString(), zombie)
 
         zombie.agentId = this.crowd.addAgent(position, zombie.agentParameters, zombie.transform)
-        this.crowd.agentGoto(zombie.agentId, this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0)));
+        this.crowd.agentGoto(zombie.agentId, GameEngine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0)));
 
-        zombie.pathPoints = this.engine.world.navigationPlugin.computePath(zombie.transform.position, this.engine.world.navigationPlugin.getClosestPoint(this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
+        zombie.pathPoints = GameEngine.world.navigationPlugin.computePath(zombie.transform.position, GameEngine.world.navigationPlugin.getClosestPoint(GameEngine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
         if (zombie.pathLine) { zombie.pathLine.dispose() }
-        zombie.pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: zombie.pathPoints, updatable: true}, this.engine.world.scene);
+        zombie.pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: zombie.pathPoints, updatable: true}, GameEngine.world.scene);
 
-        this.engine.world.scene.onBeforeRenderObservable.add(() => {
-            // zombie.pathPoints = this.engine.world.navigationPlugin.computePath(zombie.transform.position, this.engine.world.navigationPlugin.getClosestPoint(this.engine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
+        GameEngine.world.scene.onBeforeRenderObservable.add(() => {
+            // zombie.pathPoints = GameEngine.world.navigationPlugin.computePath(zombie.transform.position, GameEngine.world.navigationPlugin.getClosestPoint(GameEngine.world.navigationPlugin.getClosestPoint(new BABYLON.Vector3(0, 0, 0))));
             // if (zombie.pathLine) { zombie.pathLine.dispose() }
-            // zombie.pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: zombie.pathPoints, updatable: true}, this.engine.world.scene);
+            // zombie.pathLine = BABYLON.MeshBuilder.CreateDashedLines("ribbon", {points: zombie.pathPoints, updatable: true}, GameEngine.world.scene);
         });
 
         console.log('spawned zombie', zombie.agentId, 'at position', position)

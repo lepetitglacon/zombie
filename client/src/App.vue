@@ -4,8 +4,8 @@
 	<ChatEngine ref="chatEngineRef"/>
 
   <div style="position: absolute; color: white">{{playerPosition}}</div>
-
-	<div class="debug-pointer" ref="">{{ pointer }}</div>
+	<div style="position:absolute; color: white">Nombre de zombar : {{ GameEngine.zombieManager?.crowd?.getAgents().length }}</div>
+	<div style="position:absolute; top: 15px; color: white">Nombre de spawner : {{ GameEngine.zombieManager?.spawners.length }}</div>
 
   <canvas
       ref="canvas"
@@ -30,12 +30,7 @@ const chatEngineRef = ref()
 const playerPosition = ref()
 
 onMounted(() => {
-  const gameEngine = new GameEngine({
-	  canvas: canvas.value,
-	  chatEngineRef: chatEngineRef,
-    playerPosition: playerPosition,
-  })
-  gameEngine.init()
+  GameEngine.setCanvas(canvas.value)
 })
 </script>
 

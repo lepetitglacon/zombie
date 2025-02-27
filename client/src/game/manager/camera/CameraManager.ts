@@ -1,21 +1,18 @@
-import type GameEngine from "@/game/GameEngine";
+import GameEngine from "@/game/GameEngine";
 import * as BABYLON from "@babylonjs/core";
 
 export default class CameraManager {
-    private engine: GameEngine;
     private cameras: Map<String, BABYLON.FlyCamera|BABYLON.UniversalCamera>;
-    public camera: BABYLON.UniversalCamera;
+    public camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
 
-    constructor({engine}) {
-        this.engine = engine
-
+    constructor() {
         this.cameras = new Map()
         this.cameras.set(
             'fly',
             new BABYLON.FlyCamera(
                 "fly-camera",
                 new BABYLON.Vector3(0, 5, -10),
-                this.engine.world.scene
+                GameEngine.world.scene
             )
         )
         this.cameras.set(
@@ -23,17 +20,22 @@ export default class CameraManager {
             new BABYLON.UniversalCamera(
                 "universal-camera",
                 new BABYLON.Vector3(0, 5, -10),
-                this.engine.world.scene
+                GameEngine.world.scene
             )
         )
 
+        this.setCamera('fly')
         this.setCamera('universal')
+
+        GameEngine.canvas.addEventListener('click', () => {
+            GameEngine.canvas.requestPointerLock({unadjustedMovement: true})
+        })
     }
 
     setCamera(cameraName: String) {
         if (this.cameras.has(cameraName)) {
             this.camera = this.cameras.get(cameraName)
-            this.camera.attachControl(this.engine.canvas, true);
+            this.camera.attachControl(GameEngine.canvas, true);
 
             // this.camera.checkCollisions = true;
             // this.camera.applyGravity = true;
