@@ -78,10 +78,6 @@ export default class World {
 
         for (const mesh of scene.meshes) {
             mesh.checkCollisions = true
-            console.log(mesh.scaling, mesh)
-            // if (mesh.id === '__root__') {
-            //     mesh.scaling.x = -1
-            // }
 
             GameEngine.eventManager.onWorldMeshAdd.notifyObservers({
                 mesh,

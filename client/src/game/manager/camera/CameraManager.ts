@@ -88,6 +88,9 @@ export default class CameraManager {
             this.camera = this.cameras.get(cameraName)
             this.camera.attachControl(GameEngine.canvas, true);
             GameEngine.world.scene.activeCamera = this.camera
+            GameEngine.eventManager.onCameraChange.notifyObservers({
+                camera: GameEngine.world.scene.activeCamera
+            })
         }
     }
 }
