@@ -63,15 +63,21 @@ class Gun {
             size: .2,
         })
         this.model.parent = GameEngine.cameraManager.camera
-        this.model.position = new Vector3(.2, -.3, -1.1)
+        const initPosition = new Vector3(.2, -.3, -1.1)
+        this.model.position = initPosition
         this.model.material = mat
+        this.model.material.backFaceCulling = true
 
         GameEngine.eventManager.onCameraChange.add((e) => {
             this.model.parent = e.camera
         })
 
         GameEngine.world.scene.onPointerObservable.add((e: PointerInfo) => {
-            if (e.type === BABYLON.PointerEventTypes.POINTERDOWN) {
+            console.log(e.event.button)
+            if (
+                e.type === BABYLON.PointerEventTypes.POINTERDOWN
+                && e.event.button === 0
+            ) {
                 this.fire()
             }
         })
@@ -80,8 +86,13 @@ class Gun {
             if (this.model.rotation.x > 0) {
                 this.model.rotation.x -= 0.005;
             }
-        })
 
+            if (GameEngine.cameraManager.aiming) {
+                this.model.position = new Vector3(0, -.1, -1.1)
+            } else {
+                this.model.position = initPosition
+            }
+        })
     }
 
     fire() {
@@ -93,7 +104,7 @@ class Gun {
         rayHelper.show(GameEngine.world.scene);
         this.shotBullets.push(ray)
 
-        const result = ray.intersectsMeshes(GameEngine.world.scene.meshes)
+        const result = ray.intersectsMeshes(GameEngine.world.scene.meshes.filter(mesh => mesh !== this.model))
         for (const pickingInfo of result) {
 
             const decal = BABYLON.MeshBuilder.CreateDecal(

@@ -4,9 +4,20 @@ import * as BABYLON from "@babylonjs/core";
 export default class CameraManager {
     private cameras: Map<String, BABYLON.FlyCamera|BABYLON.UniversalCamera>;
     public camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
+    aiming: boolean;
 
     constructor() {
         this.cameras = new Map()
+
+        this.aiming = false
+        const aimingFov = .50
+        const normalFov = .80
+        window.addEventListener("mousedown", (event) => {
+            if (event.button === 2) this.aiming = true
+        });
+        window.addEventListener("mouseup", (event) => {
+            if (event.button === 2) this.aiming = false
+        });
 
         GameEngine.eventManager.onSceneInit.add(() => {
             this.cameras.set(
@@ -53,6 +64,7 @@ export default class CameraManager {
             camera.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0); // Lift collision point
 
             this.setCamera('universal')
+            GameEngine.world.scene.activeCamera.near
 
             GameEngine.world.scene.actionManager.registerAction(
                 new BABYLON.ExecuteCodeAction(
@@ -75,6 +87,18 @@ export default class CameraManager {
                 const otherCam = GameEngine.world.scene.activeCamera === camera ? flyCamera : camera
                 otherCam.position.copyFrom(GameEngine.world.scene.activeCamera.position)
                 otherCam.rotation.copyFrom(GameEngine.world.scene.activeCamera.rotation)
+
+
+                if (this.aiming) {
+                    if (GameEngine.world.scene.activeCamera.fov > aimingFov) {
+                        GameEngine.world.scene.activeCamera.fov -= 0.05
+                    }
+                } else {
+                    if (GameEngine.world.scene.activeCamera.fov < normalFov) {
+                        GameEngine.world.scene.activeCamera.fov += 0.05
+                    }
+                }
+
             })
         })
 
