@@ -1,3 +1,6 @@
+import decalTexture from '@/assets/img/decalTexture.png'
+import fireSound from "@/assets/sound/weapons/M1911/fire.mp3?url"
+
 import GameEngine from "@/game/GameEngine";
 import * as BABYLON from "@babylonjs/core";
 import {Color4, Mesh, PointerInfo, Ray, Vector3} from "@babylonjs/core";
@@ -15,7 +18,17 @@ export default class GunManager {
 
     registerGun() {
         this.guns.push(new Gun({
-            name: 'pistol'
+            name: 'pistol',
+            fireSound: new BABYLON.Sound(
+                'test',
+                fireSound,
+                GameEngine.world.scene,
+                null,
+                {
+                    loop: false,
+                    autoplay: false,
+                }
+            )
         }))
     }
 
@@ -29,12 +42,14 @@ export default class GunManager {
 
 class Gun {
     private name: string;
+    fireSound: BABYLON.Sound|null;
     model: BABYLON.Mesh;
     private shotBullets: Ray[];
     private maxRecoilAngle: number;
 
-    constructor({name}) {
+    constructor({name, fireSound}) {
         this.name = name
+        this.fireSound = fireSound
         this.shotBullets = []
         this.maxRecoilAngle = 0.3
 
@@ -72,19 +87,42 @@ class Gun {
     fire() {
         console.log('shoot')
         const dir = GameEngine.cameraManager.camera.getDirection(Vector3.Forward())
-        const pos = GameEngine.cameraManager.camera.position
-        const ray = new Ray(pos, dir, 50)
+        const pos = GameEngine.cameraManager.camera.position.clone()
+        const ray = new Ray(pos, dir.negate(), 50)
         const rayHelper = new BABYLON.RayHelper(ray);
         rayHelper.show(GameEngine.world.scene);
         this.shotBullets.push(ray)
 
-        const box = BABYLON.MeshBuilder.CreateBox(this.name, {
-            size: 5
-        }, GameEngine.world.scene)
-        box.position.copyFrom(pos.add(dir.scale(50)))
+        const result = ray.intersectsMeshes(GameEngine.world.scene.meshes)
+        for (const pickingInfo of result) {
+
+            const decal = BABYLON.MeshBuilder.CreateDecal(
+                "decal",
+                pickingInfo.pickedMesh,
+                {
+                    position: pickingInfo.pickedPoint,
+                    normal: pickingInfo.getNormal(true),
+                    size: new Vector3(.1, .1, .1),
+                }
+            );
+
+            var decalMaterial = new BABYLON.StandardMaterial("decalMat", GameEngine.world.scene);
+            decalMaterial.diffuseTexture = new BABYLON.Texture(decalTexture, GameEngine.world.scene);
+            decalMaterial.diffuseTexture.hasAlpha = true;
+            decalMaterial.zOffset = -2;
+            decal.material = decalMaterial
+        }
+
+        this.fireSound?.stop()
+        this.fireSound?.play()
 
         if (this.model.rotation.x < this.maxRecoilAngle)
         this.model.rotation.x += 0.1;
+
+        GameEngine.eventManager.onGunShot.notifyObservers({
+            pickInfos: result,
+            direction: dir,
+        })
     }
 
 }

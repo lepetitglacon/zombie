@@ -68,9 +68,6 @@ export default class World {
         console.log(this.navigationPlugin)
 
         this.scene.useRightHandedSystem = true;
-
-        const filename = mapGltf.substring(mapGltf.lastIndexOf('/') + 1)
-        const path = mapGltf.substring(0, mapGltf.lastIndexOf('/') + 1)
         const scene = await BABYLON.LoadAssetContainerAsync(mapGltf, this.scene);
 
         const navMeshObjects = ['Floor', 'Stair', 'Building']

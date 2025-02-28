@@ -7,7 +7,7 @@ import { randomNumber } from '../../utils/random.js'
 
 export default class ZombieManager {
 
-    private currentWave: Ref<UnwrapRef<number>>
+    currentWave: Ref<UnwrapRef<number>>
 
 
     public spawners: Ref<Array<BABYLON.Vector3>>
