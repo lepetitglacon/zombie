@@ -3,19 +3,19 @@ import * as GUI from '@babylonjs/gui'
 import GameEngine from "@/game/GameEngine";
 
 export default class Gui {
-    private advancedTexture: GUI.AdvancedDynamicTexture;
+    advancedTexture: GUI.AdvancedDynamicTexture;
 
     constructor() {
         // GUI
         this.advancedTexture = GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI", true, GameEngine.world.scene);
 
-        this.createButton({
-            name: 'test',
-            text: 'test',
-            trigger: (e) => {
-                console.log(e)
-            }
-        })
+        // this.createButton({
+        //     name: 'test',
+        //     text: 'test',
+        //     trigger: (e) => {
+        //         console.log(e)
+        //     }
+        // })
     }
 
     createButton(options = {}) {

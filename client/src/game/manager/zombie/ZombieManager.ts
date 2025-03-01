@@ -55,13 +55,26 @@ export default class ZombieManager {
                 console.log('registered spawner')
             }
         })
-        // this.addEventListener('spawn:zombie', (args: any) => {
-        //     this.spawn(args)
-        // })
         GameEngine.world.scene.onBeforeRenderObservable.add((e) => {
             const now = new Date().getTime()
             if (this.shouldSpawnZombie(now)) {
                 this.spawn({}, now)
+            }
+        })
+        GameEngine.eventManager.onGunShot.add((e) => {
+            for (const pickInfo of e.pickInfos) {
+                console.log(pickInfo.pickedMesh)
+                if (pickInfo.pickedMesh.isZombie) {
+                    console.log('zombie hit', pickInfo.pickedMesh.zombie)
+                    const zombie = pickInfo.pickedMesh.zombie
+                    zombie.hp -= e.baseGunDamage
+
+                    if (zombie.hp <= 0) {
+                        this.crowd.removeAgent(zombie.agentId)
+                        this.zombies.value.delete(zombie.agentId)
+                        zombie.kill()
+                    }
+                }
             }
         })
     }

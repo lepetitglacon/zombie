@@ -11,7 +11,7 @@ export default class CameraManager {
     constructor() {
         this.cameras = new Map()
         const baseSensiblity = 1500
-        const adsSensiblity = 10000
+        const adsSensiblity = 3000
 
         const baseSpeed = 2
         const adsSpeed = 1.5
@@ -62,6 +62,7 @@ export default class CameraManager {
             camera.keysRight = [68]
             camera.rollCorrect = 2
             camera.speed = 2; // Move speed
+            camera.minZ = 0.01; // Move speed
             camera.inertia = 0.2;
             camera.angularSensibility = baseSensiblity; // Mouse sensitivity
             camera.needMoveForGravity = true

@@ -41,7 +41,7 @@ import EventManager from "@/game/manager/event/EventManager";
         this.gunManager = new GunManager()
 
         // Game
-        // this.gui = new Gui()
+        this.gui = new Gui()
         // this.mapEditor = new MapEditor({engine: this})
 
 

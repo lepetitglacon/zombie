@@ -1,12 +1,18 @@
-import {Observable} from "@babylonjs/core";
+import {Observable, PickingInfo, type Vector3} from "@babylonjs/core";
 
 export default class EventManager {
     public onWorldMeshAdd: Observable;
     public onCameraChange: Observable;
     public onMapLoaded: Observable;
     public onSceneInit: Observable;
-    public onGunShot: Observable;
-    public onAds: Observable<{percentage: number}>;
+    public onGunShot: Observable<{
+        pickInfos: PickingInfo[],
+        direction: Vector3,
+        baseGunDamage: number,
+    }>;
+    public onAds: Observable<{
+        percentage: number
+    }>;
 
     constructor() {
 
