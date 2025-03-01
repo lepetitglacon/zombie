@@ -63,7 +63,6 @@ export default class ZombieManager {
         })
         GameEngine.eventManager.onGunShot.add((e) => {
             for (const pickInfo of e.pickInfos) {
-                console.log(pickInfo.pickedMesh)
                 if (pickInfo.pickedMesh.isZombie) {
                     console.log('zombie hit', pickInfo.pickedMesh.zombie)
                     const zombie = pickInfo.pickedMesh.zombie

@@ -7,14 +7,17 @@ export default class CameraManager {
     private cameras: Map<String, BABYLON.FlyCamera|BABYLON.UniversalCamera>;
     public camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
     aiming: Ref<UnwrapRef<boolean>>;
+    running: boolean;
 
     constructor() {
         this.cameras = new Map()
         const baseSensiblity = 1500
-        const adsSensiblity = 3000
+        const adsSensiblity = 10000
 
         const baseSpeed = 2
         const adsSpeed = 1.5
+        this.running = false
+        const runningSpeed = 3
 
         this.aiming = ref(false)
         const aimingFov = .50
@@ -77,6 +80,7 @@ export default class CameraManager {
                 new BABYLON.ExecuteCodeAction(
                     BABYLON.ActionManager.OnKeyDownTrigger,
                     (evt) => {
+                        console.log(evt)
                         if (evt.sourceEvent.key === 'c') {
                             this.camera.detachControl()
                             GameEngine.world.scene.activeCamera = GameEngine.world.scene.activeCamera === camera ? flyCamera : camera
@@ -87,6 +91,21 @@ export default class CameraManager {
                             GameEngine.eventManager.onCameraChange.notifyObservers({
                                 camera: this.camera
                             })
+                        }
+
+                        if (evt.sourceEvent.key === 'Shift') {
+                            this.running = true
+                        }
+                    }
+                )
+            );
+
+            GameEngine.world.scene.actionManager.registerAction(
+                new BABYLON.ExecuteCodeAction(
+                    BABYLON.ActionManager.OnKeyUpTrigger,
+                    (evt) => {
+                        if (evt.sourceEvent.key === 'Shift') {
+                            this.running = false
                         }
                     }
                 )
@@ -111,6 +130,12 @@ export default class CameraManager {
                     if (GameEngine.world.scene.activeCamera.fov < normalFov) {
                         GameEngine.world.scene.activeCamera.fov += 0.05
                     }
+                }
+
+                if (this.running) {
+                    GameEngine.world.scene.activeCamera.speed = runningSpeed
+                } else {
+                    GameEngine.world.scene.activeCamera.speed = baseSpeed
                 }
 
             })

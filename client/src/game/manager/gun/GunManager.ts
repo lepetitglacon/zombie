@@ -5,6 +5,7 @@ import gunModel from "@/assets/gltf/weapons/m1911.glb?url"
 import GameEngine from "@/game/GameEngine";
 import * as BABYLON from "@babylonjs/core";
 import {Color4, Mesh, PointerInfo, Ray, Vector3} from "@babylonjs/core";
+import {Lerp} from "@babylonjs/core/Maths/math.scalar.functions";
 
 export default class GunManager {
     private guns: Gun[];
@@ -64,6 +65,9 @@ class Gun {
         let adsLerpFactor = 0;
         let adsSpeed = 0.1;
 
+        let runningLerpFactor = 0;
+        let runningRotation = Math.PI / 3;
+
         const mat = new BABYLON.StandardMaterial("test", GameEngine.world.scene);
         mat.alpha = 1;
         mat.diffuseColor = new BABYLON.Color3(1.0, 0.2, 0.7);
@@ -116,6 +120,17 @@ class Gun {
             } else {
                 adsLerpFactor = Math.max(adsLerpFactor - adsSpeed, 0)
                 this.model.position = BABYLON.Vector3.Lerp(initPosition, aimedPosition, adsLerpFactor)
+            }
+            GameEngine.eventManager.onAds.notifyObservers({
+                percentage: adsLerpFactor
+            })
+
+            if (GameEngine.cameraManager.running) {
+                runningLerpFactor = Math.min(runningLerpFactor + adsSpeed, 1)
+                this.model.rotation.y = Lerp(0, runningRotation, runningLerpFactor)
+            } else {
+                runningLerpFactor = Math.max(runningLerpFactor - adsSpeed, 0)
+                this.model.rotation.y = Lerp(0, runningRotation, runningLerpFactor)
             }
             GameEngine.eventManager.onAds.notifyObservers({
                 percentage: adsLerpFactor
