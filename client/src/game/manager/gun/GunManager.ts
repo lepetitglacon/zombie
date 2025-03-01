@@ -53,6 +53,12 @@ class Gun {
         this.shotBullets = []
         this.maxRecoilAngle = 0.3
 
+        // ads
+        const initPosition = new Vector3(.2, -.3, -1.1)
+        const aimedPosition = new Vector3(0, -.1, -1.1)
+        let adsLerpFactor = 0;
+        let adsSpeed = 0.1;
+
         const mat = new BABYLON.StandardMaterial("test", GameEngine.world.scene);
         mat.alpha = 1;
         mat.diffuseColor = new BABYLON.Color3(1.0, 0.2, 0.7);
@@ -63,7 +69,6 @@ class Gun {
             size: .2,
         })
         this.model.parent = GameEngine.cameraManager.camera
-        const initPosition = new Vector3(.2, -.3, -1.1)
         this.model.position = initPosition
         this.model.material = mat
         this.model.material.backFaceCulling = true
@@ -87,11 +92,17 @@ class Gun {
                 this.model.rotation.x -= 0.005;
             }
 
-            if (GameEngine.cameraManager.aiming) {
-                this.model.position = new Vector3(0, -.1, -1.1)
+            // ADS
+            if (GameEngine.cameraManager.aiming.value) {
+                adsLerpFactor = Math.min(adsLerpFactor + adsSpeed, 1)
+                this.model.position = BABYLON.Vector3.Lerp(initPosition, aimedPosition, adsLerpFactor)
             } else {
-                this.model.position = initPosition
+                adsLerpFactor = Math.max(adsLerpFactor - adsSpeed, 0)
+                this.model.position = BABYLON.Vector3.Lerp(initPosition, aimedPosition, adsLerpFactor)
             }
+            GameEngine.eventManager.onAds.notifyObservers({
+                percentage: adsLerpFactor
+            })
         })
     }
 

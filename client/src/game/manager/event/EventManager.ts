@@ -6,6 +6,7 @@ export default class EventManager {
     public onMapLoaded: Observable;
     public onSceneInit: Observable;
     public onGunShot: Observable;
+    public onAds: Observable<{percentage: number}>;
 
     constructor() {
 
@@ -20,6 +21,7 @@ export default class EventManager {
 
         // gun
         this.onGunShot = new Observable()
+        this.onAds = new Observable()
     }
 
 }

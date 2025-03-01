@@ -1,22 +1,29 @@
 import GameEngine from "@/game/GameEngine";
 import * as BABYLON from "@babylonjs/core";
+import {type Ref, ref, type UnwrapRef} from "vue";
+import {Lerp} from "@babylonjs/core/Maths/math.scalar.functions";
 
 export default class CameraManager {
     private cameras: Map<String, BABYLON.FlyCamera|BABYLON.UniversalCamera>;
     public camera: BABYLON.FlyCamera|BABYLON.UniversalCamera;
-    aiming: boolean;
+    aiming: Ref<UnwrapRef<boolean>>;
 
     constructor() {
         this.cameras = new Map()
+        const baseSensiblity = 1500
+        const adsSensiblity = 10000
 
-        this.aiming = false
+        const baseSpeed = 2
+        const adsSpeed = 1.5
+
+        this.aiming = ref(false)
         const aimingFov = .50
         const normalFov = .80
         window.addEventListener("mousedown", (event) => {
-            if (event.button === 2) this.aiming = true
+            if (event.button === 2) this.aiming.value = true
         });
         window.addEventListener("mouseup", (event) => {
-            if (event.button === 2) this.aiming = false
+            if (event.button === 2) this.aiming.value = false
         });
 
         GameEngine.eventManager.onSceneInit.add(() => {
@@ -56,7 +63,7 @@ export default class CameraManager {
             camera.rollCorrect = 2
             camera.speed = 2; // Move speed
             camera.inertia = 0.2;
-            camera.angularSensibility = 1500; // Mouse sensitivity
+            camera.angularSensibility = baseSensiblity; // Mouse sensitivity
             camera.needMoveForGravity = true
             camera.checkCollisions = true;
             camera.applyGravity = true;
@@ -64,24 +71,30 @@ export default class CameraManager {
             camera.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0); // Lift collision point
 
             this.setCamera('universal')
-            GameEngine.world.scene.activeCamera.near
 
             GameEngine.world.scene.actionManager.registerAction(
                 new BABYLON.ExecuteCodeAction(
                     BABYLON.ActionManager.OnKeyDownTrigger,
                     (evt) => {
                         if (evt.sourceEvent.key === 'c') {
-                            GameEngine.world.scene.activeCamera.detachControl()
+                            this.camera.detachControl()
                             GameEngine.world.scene.activeCamera = GameEngine.world.scene.activeCamera === camera ? flyCamera : camera
-                            GameEngine.world.scene.activeCamera.attachControl(GameEngine.canvas, true); // Attach again
                             this.camera = GameEngine.world.scene.activeCamera
+                            this.camera.attachControl(GameEngine.canvas, true); // Attach again
+                            this.camera.rotation.x = 0
+                            this.camera.rotation.z = 0
                             GameEngine.eventManager.onCameraChange.notifyObservers({
-                                camera: GameEngine.world.scene.activeCamera
+                                camera: this.camera
                             })
                         }
                     }
                 )
             );
+
+            GameEngine.eventManager.onAds.add((e) => {
+                this.camera.angularSensibility = Lerp(baseSensiblity, Math.min(adsSensiblity, baseSensiblity), e.percentage)
+                this.camera.speed = Lerp(baseSpeed, Math.min(adsSpeed, baseSpeed), e.percentage)
+            })
 
             GameEngine.world.scene.onBeforeRenderObservable.add((e) => {
                 const otherCam = GameEngine.world.scene.activeCamera === camera ? flyCamera : camera
@@ -89,7 +102,7 @@ export default class CameraManager {
                 otherCam.rotation.copyFrom(GameEngine.world.scene.activeCamera.rotation)
 
 
-                if (this.aiming) {
+                if (this.aiming.value) {
                     if (GameEngine.world.scene.activeCamera.fov > aimingFov) {
                         GameEngine.world.scene.activeCamera.fov -= 0.05
                     }

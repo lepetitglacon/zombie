@@ -7,6 +7,7 @@
 	<div style="position:absolute; color: white">Nombre de zombar : {{ GameEngine.zombieManager?.crowd?.getAgents().length }}</div>
 	<div style="position:absolute; top: 15px; color: white">Nombre de spawner : {{ GameEngine.zombieManager?.spawners.value.length }}</div>
 	<div style="position:absolute; top: 30px; color: white">Wave : {{ GameEngine.zombieManager?.currentWave.value }}</div>
+	<div style="position:absolute; top: 45px; color: white">Wave : {{ GameEngine.cameraManager?.aiming }}</div>
 
   <canvas
       ref="canvas"
@@ -22,7 +23,7 @@
 import './assets/css/reset.css'
 
 import { RouterLink, RouterView } from 'vue-router'
-import {onMounted, ref} from "vue";
+import {onMounted, ref, watch} from "vue";
 import GameEngine from "@/game/GameEngine";
 import ChatEngine from "@/components/ChatEngine/ChatEngine.vue";
 
@@ -32,6 +33,10 @@ const playerPosition = ref()
 
 onMounted(() => {
   GameEngine.setCanvas(canvas.value)
+})
+
+watch(GameEngine, () => {
+
 })
 </script>
 
