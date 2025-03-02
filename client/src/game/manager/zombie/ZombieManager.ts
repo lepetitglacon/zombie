@@ -57,13 +57,10 @@ export default class ZombieManager {
                         // zombie.hitbox.rotation.y = zombie.hitbox.rotation.y + (desiredRotation - zombie.hitbox.rotation.y) * 0.05;
                         if (zombie.gltf) {
                             for (const node of zombie.gltf.rootNodes) {
-                                // node.rotation.y =  node.rotation.y + (desiredRotation - node.rotation.y) * 0.05
-
                                 for (const mesh of node.getChildMeshes()) {
                                     mesh.rotation.z =  mesh.rotation.z + (desiredRotation - mesh.rotation.z) * 0.05
                                 }
                             }
-                            // zombie.gltf.rotation.y = zombie.gltf.rotation.y + (desiredRotation - zombie.gltf.rotation.y) * 0.05;
                         }
                     }
                 }

@@ -24,7 +24,7 @@ export default class World {
 
     constructor() {
         this.babylonEngine = new BABYLON.Engine(GameEngine.canvas, true)
-        this.babylonEngine.maxFPS = 240
+        this.babylonEngine.maxFPS = 60
 
         this.scene = new BABYLON.Scene(this.babylonEngine)
         this.scene.collisionsEnabled = true
