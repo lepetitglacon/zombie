@@ -4,7 +4,7 @@ import BasicZombie from "@/game/entity/zombie/BasicZombie";
 export default class ZombieFactory {
     constructor() {}
 
-    createZombie(conf = {}) {
+    static createZombie(conf = {}) {
 
         let zombie
         switch (conf?.type) {

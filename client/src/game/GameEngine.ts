@@ -6,15 +6,19 @@ import Gui from "@/game/gui/Gui";
 import MapEditor from "@/game/editor/MapEditor";
 import CameraManager from "@/game/manager/camera/CameraManager";
 import GunManager from "@/game/manager/gun/GunManager";
-import type {Ref} from "vue";
-import {Vector3} from "@babylonjs/core";
+import {type Ref, ref} from "vue";
 import EventManager from "@/game/manager/event/EventManager";
+import SoundManager from "@/game/manager/sound/SoundManager";
+import ModelManager from "@/game/manager/model/ModelManager";
 
  class GameEngine {
 
+    public points: number;
     public canvas: HTMLCanvasElement;
     public world: World;
     public chatEngineRef: any;
+    public modelManager: ModelManager;
+    public soundManager: SoundManager;
     public eventManager: EventManager;
     public commandManager: CommandManager;
     public cameraManager: CameraManager;
@@ -23,6 +27,10 @@ import EventManager from "@/game/manager/event/EventManager";
     public gui: Gui;
     public mapEditor: MapEditor;
     private playerPosition: Ref<HTMLDivElement>;
+
+    constructor() {
+        this.points = 0
+    }
 
     setCanvas(canvas: HTMLCanvasElement) {
         this.canvas = canvas
@@ -33,23 +41,29 @@ import EventManager from "@/game/manager/event/EventManager";
         this.world = new World()
 
         this.eventManager = new EventManager()
-
-        // Managers
+        this.modelManager = new ModelManager()
+        this.soundManager = new SoundManager()
         this.cameraManager = new CameraManager()
         this.commandManager = new CommandManager()
         this.zombieManager = new ZombieManager()
         this.gunManager = new GunManager()
 
-        // Game
         this.gui = new Gui()
-        // this.mapEditor = new MapEditor({engine: this})
+        // this.mapEditor = new MapEditor()
 
-
+        // await this.mapEditor.init()
+        await this.modelManager.init()
         await this.world.loadMap()
         await this.world.init()
-        // await this.mapEditor.init()
-        await this.zombieManager.init() //todo mettre navmesh ici
+        await this.zombieManager.init()
+        // await this.eventManager.init()
+        // await this.soundManager.init()
+        // await this.cameraManager.init()
+        // await this.commandManager.init()
+        await this.zombieManager.init()
+        // await this.gunManager.init()
     }
 }
-const gameEngine = new GameEngine()
+
+let gameEngine = new GameEngine()
 export default gameEngine

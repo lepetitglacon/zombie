@@ -15,7 +15,7 @@ export default class CameraManager {
         const adsSensiblity = 10000
 
         const baseSpeed = 2
-        const adsSpeed = 1.5
+        const adsSpeed = 1
         this.running = false
         const runningSpeed = 3
 
@@ -72,7 +72,7 @@ export default class CameraManager {
             camera.checkCollisions = true;
             camera.applyGravity = true;
             camera.ellipsoid = new BABYLON.Vector3(1.1, 1.8, 1.1);
-            camera.ellipsoidOffset = new BABYLON.Vector3(0, 1, 0); // Lift collision point
+            camera.ellipsoidOffset = new BABYLON.Vector3(0, 2, 0); // Lift collision point
 
             this.setCamera('universal')
 
@@ -80,7 +80,6 @@ export default class CameraManager {
                 new BABYLON.ExecuteCodeAction(
                     BABYLON.ActionManager.OnKeyDownTrigger,
                     (evt) => {
-                        console.log(evt)
                         if (evt.sourceEvent.key === 'c') {
                             this.camera.detachControl()
                             GameEngine.world.scene.activeCamera = GameEngine.world.scene.activeCamera === camera ? flyCamera : camera

@@ -13,6 +13,13 @@ export default class EventManager {
     public onAds: Observable<{
         percentage: number
     }>;
+    public onZombieSpawnCall: Observable<{}>;
+    public onZombieKillCall: Observable<{}>;
+    public onWaveStart: Observable<{}>;
+    public onWaveEnd: Observable<{}>;
+
+    public onBuyDoorDemand: Observable<{}>;
+    public onDoorBought: Observable<{}>;
 
     constructor() {
 
@@ -25,9 +32,18 @@ export default class EventManager {
         // debug
         this.onCameraChange = new Observable()
 
+        // world
+
+
         // gun
         this.onGunShot = new Observable()
         this.onAds = new Observable()
+
+        // zombie / wave
+        this.onZombieSpawnCall = new Observable()
+        this.onZombieKillCall = new Observable()
+        this.onWaveStart = new Observable()
+        this.onWaveEnd = new Observable()
     }
 
 }

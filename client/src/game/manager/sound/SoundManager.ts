@@ -2,26 +2,35 @@ import GameEngine from "@/game/GameEngine";
 import * as BABYLON from '@babylonjs/core'
 
 // assets
-import  "@/assets/sound/gunshot.wav?url"
-import "../../client/assets/sound/gunreload.mp3"
-import "../../client/assets/sound/knife.wav"
-import "../../client/assets/sound/wave/start.wav"
-import "../../client/assets/sound/wave/end.wav"
+import mainLobby from "@/assets/sound/lobby/mainlobby.mp3"
+import waveStart from "@/assets/sound/wave/start.wav?url"
+import waveEnd from "@/assets/sound/wave/end.wav?url"
 
 export default class SoundManager {
     private sounds: Map<string, BABYLON.Sound>;
 
     constructor() {
+        BABYLON.Engine.audioEngine.useCustomUnlockedButton = true;
+        window.addEventListener(
+            "click",
+            () => {
+                if (!BABYLON.Engine.audioEngine.unlocked) {
+                    BABYLON.Engine.audioEngine.unlock();
+                }
+            },
+            { once: true },
+        );
+
         this.sounds = new Map()
         this.loadSounds()
     }
 
     async loadSounds() {
-        this.loadSound('weapon_pistol_shot', 'assets/sound/gunshot.wav')
-        this.loadSound('weapon_pistol_reload', 'assets/sound/gunreload.mp3')
-        this.loadSound('weapon_knife_slash', 'assets/sound/knife.wav')
-        this.loadSound('wave_start', 'assets/sound/wave/start.wav')
-        this.loadSound('wave_end', 'assets/sound/wave/end.wav')
+        // this.loadSound('weapon_pistol_shot', 'assets/sound/gunshot.wav')
+        // this.loadSound('weapon_pistol_reload', 'assets/sound/gunreload.mp3')
+        // this.loadSound('weapon_knife_slash', 'assets/sound/knife.wav')
+        this.loadSound('wave_start', waveStart)
+        this.loadSound('wave_end', waveEnd)
     }
 
     loadSound(name: string, path: string) {
@@ -31,19 +40,10 @@ export default class SoundManager {
             GameEngine.world.scene,
             null,
             {
-                loop: true,
-                autoplay: true,
+                // loop: true,
+                // autoplay: true,
             }
         );
-        this.loader.load( SERVER_HOST + path, ( buffer ) => {
-                sound.setBuffer( buffer );
-                sound.setLoop( false );
-                sound.setVolume( .5 );
-            },
-            () => {},
-            (error) => {
-                console.error(error)
-            });
         this.sounds.set(name, sound)
         console.log(`[ASSETS][SOUND] sound ${name} loaded`)
     }
@@ -51,7 +51,6 @@ export default class SoundManager {
     play(name) {
         if (this.sounds.has(name)) {
             this.sounds.get(name).play()
-            this.sounds.get(name).onEnded()
         }
     }
 

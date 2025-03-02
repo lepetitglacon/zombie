@@ -24,12 +24,16 @@ export default class World {
 
     constructor() {
         this.babylonEngine = new BABYLON.Engine(GameEngine.canvas, true)
-        this.babylonEngine.maxFPS = 60
+        this.babylonEngine.maxFPS = 240
 
         this.scene = new BABYLON.Scene(this.babylonEngine)
         this.scene.collisionsEnabled = true
         this.scene.gravity.set(0, -10/this.babylonEngine.maxFPS, 0)
         this.scene.actionManager = new BABYLON.ActionManager(this.scene);
+
+        this.scene.fogMode = BABYLON.Scene.FOGMODE_EXP2;
+        this.scene.fogDensity = 0.02;
+        this.scene.fogColor = this.scene.clearColor;
 
         window.CANNON = CANNON;
         const gravityVector = new BABYLON.Vector3(0,-9.81, 0);
@@ -65,7 +69,6 @@ export default class World {
     async loadMap() {
         const recast = await Recast();
         this.navigationPlugin = new RecastJSPlugin(recast);
-        console.log(this.navigationPlugin)
 
         this.scene.useRightHandedSystem = true;
         const scene = await BABYLON.LoadAssetContainerAsync(mapGltf, this.scene);
@@ -129,16 +132,7 @@ export default class World {
                 case 'Door': {
                     const scale = 2
                     const position = mesh.position.clone()
-                    const door = BABYLON.MeshBuilder.CreateBox('door', {
-                        width: mesh.scaling.x * scale,
-                        height: mesh.scaling.y * scale,
-                        depth: mesh.scaling.z * scale,
-                    }, this.scene)
-                    // door.checkCollisions = true
                     const rotation = mesh.rotationQuaternion?.toEulerAngles()?.y ?? 0
-                    door.rotation.y = rotation
-                    door.position.copyFrom(position)
-
                     this.obstacles.set(
                         this.navigationPlugin.addBoxObstacle(
                             position,
@@ -149,7 +143,7 @@ export default class World {
                             ),
                             rotation
                         ),
-                        door
+                        mesh
                     )
                     break
                 }
@@ -178,10 +172,7 @@ export default class World {
 
         window.addEventListener('keydown', e => {
             if (e.key === 'o') {
-                console.log(this.obstacles)
-
                 for (const [obstacle, mesh] of this.obstacles.entries()) {
-                    console.log(obstacle)
                     GameEngine.world.navigationPlugin.removeObstacle(obstacle)
                     mesh.dispose()
                 }

@@ -50,14 +50,15 @@ class Gun {
     private maxRecoilAngle: number;
     private transformNode: BABYLON.TransformNode;
     damage: number;
+    private decalMaterial: BABYLON.StandardMaterial;
 
     constructor({name, fireSound}) {
         this.name = name
         this.fireSound = fireSound
         this.shotBullets = []
-        this.maxRecoilAngle = 0.3
+        this.maxRecoilAngle = 0.15
 
-        this.damage = 10
+        this.damage = 20
 
         // ads
         const initPosition = new Vector3(.2, -.3, -1.1)
@@ -81,6 +82,11 @@ class Gun {
         this.model.position = initPosition
         this.model.material = mat
         this.model.material.backFaceCulling = true
+
+        this.decalMaterial = new BABYLON.StandardMaterial("decalMat", GameEngine.world.scene);
+        this.decalMaterial.diffuseTexture = new BABYLON.Texture(decalTexture, GameEngine.world.scene);
+        this.decalMaterial.diffuseTexture.hasAlpha = true;
+        this.decalMaterial.zOffset = -2;
 
         BABYLON.LoadAssetContainerAsync(gunModel, GameEngine.world.scene).then((assetContainer) => {
             this.transformNode = new BABYLON.TransformNode('', GameEngine.world.scene)
@@ -147,6 +153,10 @@ class Gun {
         rayHelper.show(GameEngine.world.scene);
         this.shotBullets.push(ray)
 
+        setTimeout(() => {
+            rayHelper.dispose()
+        }, 2000)
+
         const result = ray.intersectsMeshes(
             GameEngine.world.scene.meshes.filter(
                 mesh => {
@@ -155,6 +165,7 @@ class Gun {
                 }
             )
         )
+        console.log(result)
         for (const pickingInfo of result) {
             // Decal
             if (!pickingInfo.pickedMesh.isZombie) {
@@ -168,11 +179,10 @@ class Gun {
                         // localMode: true,
                     }
                 );
-                const decalMaterial = new BABYLON.StandardMaterial("decalMat", GameEngine.world.scene);
-                decalMaterial.diffuseTexture = new BABYLON.Texture(decalTexture, GameEngine.world.scene);
-                decalMaterial.diffuseTexture.hasAlpha = true;
-                decalMaterial.zOffset = -2;
-                decal.material = decalMaterial
+                decal.material = this.decalMaterial
+                setTimeout(() => {
+                    decal.dispose()
+                }, 2000)
             }
         }
 

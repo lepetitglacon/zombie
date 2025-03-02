@@ -5,7 +5,6 @@ import * as CANNON from 'cannon-es'
 import GameEngine from "@/game/GameEngine";
 
 export default class AbstractZombie extends AbstractEntity {
-    public hp: number;
     public hitbox: BABYLON.Mesh;
     public agentId: number;
     public agentParameters: {
@@ -21,15 +20,21 @@ export default class AbstractZombie extends AbstractEntity {
     private plane: BABYLON.Mesh;
     private textBlock: GUI.TextBlock;
 
+    public hp: number;
+    public maxHp: number;
+    public gltf: BABYLON.InstantiatedEntries;
+
     constructor(scene: BABYLON.Scene) {
         super(scene)
 
-        this.hp = 100
+        this.maxHp = 150
+        this.hp = this.maxHp
+
         this.agentParameters = {
             radius: .5,
             height: 1.8,
-            maxAcceleration: 1.5,
-            maxSpeed: 2.5,
+            maxAcceleration: 3,
+            maxSpeed: 1,
             collisionQueryRange: 1,
             pathOptimizationRange: 0.0,
             separationWeight: 1.0,
@@ -42,9 +47,14 @@ export default class AbstractZombie extends AbstractEntity {
         this.hitbox.position.y += this.agentParameters.height / 2;
         this.hitbox.isZombie = true
         this.hitbox.zombie = this
+        this.hitbox.isVisible = false
+        this.hitbox.checkCollisions = true
 
         this.transform = new BABYLON.TransformNode('transform');
         this.hitbox.parent = this.transform;
+        this.hitbox.onCollideObservable.add(e => {
+            console.log(e)
+        })
 
         this.pathPoints = null
         this.pathLine = null
@@ -68,6 +78,13 @@ export default class AbstractZombie extends AbstractEntity {
             false
         );
         advancedTexture2.addControl(this.textBlock)
+
+        this.gltf = GameEngine.modelManager.getNewInstance('zombie')
+        for (const node of this.gltf.rootNodes) {
+            node.isZombie = true
+            node.zombie = this
+            node.parent = this.transform
+        }
 
         GameEngine.world.scene.onBeforeRenderObservable.add((e) => {
             this.textBlock.text = `${this.agentId} ${this.hp}`;
